@@ -1,0 +1,57 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="codeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#cccc00;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#888800;stop-opacity:1" />
+    </linearGradient>
+    <filter id="codeGlow">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="300" height="200" fill="#0a0a0a"/>
+  
+  <!-- Terminal window -->
+  <rect x="20" y="30" width="260" height="140" rx="8" fill="#1a1a1a" stroke="#00aa00" stroke-width="2"/>
+  
+  <!-- Terminal header -->
+  <rect x="20" y="30" width="260" height="25" rx="8" fill="#2a2a2a"/>
+  <circle cx="35" cy="42" r="4" fill="#ff5555"/>
+  <circle cx="50" cy="42" r="4" fill="#ffbb33"/>
+  <circle cx="65" cy="42" r="4" fill="#00ff00"/>
+  
+  <!-- Code lines -->
+  <g font-family="monospace" font-size="10" fill="#00aa00">
+    <text x="30" y="75" opacity="0.9">function hackTheMatrix() {</text>
+    <text x="40" y="90" opacity="0.8">  const secure = true;</text>
+    <text x="40" y="105" opacity="0.9">  if (secure) {</text>
+    <text x="50" y="120" opacity="0.7">    console.log("Access granted");</text>
+    <text x="40" y="135" opacity="0.8">  }</text>
+    <text x="30" y="150" opacity="0.9">}</text>
+  </g>
+  
+  <!-- Cursor -->
+  <rect x="115" y="145" width="8" height="12" fill="#00aa00" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1s" repeatCount="indefinite"/>
+  </rect>
+  
+  <!-- Language icons/symbols -->
+  <g opacity="0.6">
+    <text x="30" y="190" fill="#cccc00" font-family="monospace" font-size="12" font-weight="bold">JS</text>
+    <text x="60" y="190" fill="#cc7700" font-family="monospace" font-size="12" font-weight="bold">JAVA</text>
+    <text x="105" y="190" fill="#3388cc" font-family="monospace" font-size="12" font-weight="bold">PY</text>
+    <text x="135" y="190" fill="#aa33cc" font-family="monospace" font-size="12" font-weight="bold">C++</text>
+    <text x="170" y="190" fill="#00cccc" font-family="monospace" font-size="12" font-weight="bold">DART</text>
+    <text x="215" y="190" fill="#ff6666" font-family="monospace" font-size="12" font-weight="bold">REACT</text>
+  </g>
+  
+  <!-- Title -->
+  <text x="150" y="20" text-anchor="middle" fill="#cccc00" font-family="monospace" font-size="14" font-weight="bold">
+    FULL-STACK DEVELOPMENT
+  </text>
+</svg> 
