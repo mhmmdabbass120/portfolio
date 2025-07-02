@@ -267,10 +267,11 @@ export const Terminal = () => {
 
   if (showBootSequence) {
     return (
-      <div className="min-h-screen bg-terminal-bg text-terminal-text p-4 flex items-center justify-center boot-container">
-        <div className="text-center boot-content">
-          <div className="ascii-art mb-8 text-terminal-accent glowing-ascii">
-            <pre className="text-lg font-mono">
+      <div className="min-h-screen bg-terminal-bg text-terminal-text px-2 py-4 sm:p-4 flex items-center justify-center boot-container">
+        <div className="text-center boot-content w-full max-w-4xl">
+          <div className="ascii-art mb-6 sm:mb-8 text-terminal-accent glowing-ascii overflow-x-auto">
+            {/* Desktop ASCII Art */}
+            <pre className="hidden md:block text-base lg:text-lg font-mono whitespace-pre">
 {`
  ███▄ ▄███▓ ▒█████   ██░ ██  ▄▄▄       ███▄ ▄███▓███▄ ▄███▓▄▄▄      ▓█████▄ 
 ▓██▒▀█▀ ██▒▒██▒  ██▒▓██░ ██▒▒████▄    ▓██▒▀█▀ ██▒▓██▒▀█▀ ██▒████▄    ▒██▀ ██▌
@@ -282,12 +283,43 @@ export const Terminal = () => {
                                                                       ░      
 `}
             </pre>
+            
+            {/* Tablet ASCII Art */}
+            <pre className="hidden sm:block md:hidden text-xs font-mono whitespace-pre">
+{`
+███▄ ▄███▓ ▒█████   ██░ ██  ▄▄▄       ███▄ ▄███▓███▄ ▄███▓▄▄▄      ▓█████▄ 
+▓██▒▀█▀ ██▒▒██▒  ██▒▓██░ ██▒▒████▄    ▓██▒▀█▀ ██▒▓██▒▀█▀ ██▒████▄    ▒██▀ ██▌
+▓██    ▓██░▒██░  ██▒▒██▀▀██░▒██  ▀█▄  ▓██    ▓██░▓██    ▓██░██  ▀█▄  ░██   █▌
+▒██    ▒██ ▒██   ██░░▓█ ░██ ░██▄▄▄▄██ ▒██    ▒██ ▒██    ▒██ ██▄▄▄▄██ ░▓█▄   ▌
+▒██▒   ░██▒░ ████▓▒░░▓█▒░██▓ ▓█   ▓██▒▒██▒   ░██▒▒██▒   ░██▒▓█   ▓██▒░▒████▓
+`}
+            </pre>
+            
+            {/* Mobile ASCII Art - Simplified */}
+            <div className="block sm:hidden">
+              <div className="text-2xl sm:text-3xl font-bold mb-2 tracking-wider">
+                MOHAMMAD
+              </div>
+              <div className="text-lg font-bold tracking-widest">
+                ABBASS
+              </div>
+            </div>
           </div>
-          <div className="boot-sequence text-terminal-accent glowing-text">
-            <div className="mb-2 boot-item" style={{ animationDelay: '0.5s' }}>🔐 INITIALIZING SECURE TERMINAL...</div>
-            <div className="mb-2 boot-item" style={{ animationDelay: '1s' }}>🛡️ LOADING CYBERSECURITY PROTOCOLS...</div>
-            <div className="mb-2 boot-item" style={{ animationDelay: '1.5s' }}>🚀 ESTABLISHING CONNECTION...</div>
-            <div className="loading-bar mt-4 boot-item" style={{ animationDelay: '2s' }}>
+          
+          <div className="boot-sequence text-terminal-accent glowing-text px-2">
+            <div className="mb-2 sm:mb-3 boot-item text-xs sm:text-sm md:text-base" style={{ animationDelay: '0.5s' }}>
+              🔐 <span className="hidden sm:inline">INITIALIZING SECURE TERMINAL...</span>
+              <span className="sm:hidden">INITIALIZING...</span>
+            </div>
+            <div className="mb-2 sm:mb-3 boot-item text-xs sm:text-sm md:text-base" style={{ animationDelay: '1s' }}>
+              🛡️ <span className="hidden sm:inline">LOADING CYBERSECURITY PROTOCOLS...</span>
+              <span className="sm:hidden">LOADING PROTOCOLS...</span>
+            </div>
+            <div className="mb-2 sm:mb-3 boot-item text-xs sm:text-sm md:text-base" style={{ animationDelay: '1.5s' }}>
+              🚀 <span className="hidden sm:inline">ESTABLISHING CONNECTION...</span>
+              <span className="sm:hidden">CONNECTING...</span>
+            </div>
+            <div className="loading-bar mt-3 sm:mt-4 boot-item px-4 sm:px-8" style={{ animationDelay: '2s' }}>
               <div className="bg-terminal-border h-2 rounded">
                 <div className="bg-terminal-accent h-2 rounded animate-pulse glowing-progress" style={{
                   width: '100%',
@@ -295,7 +327,7 @@ export const Terminal = () => {
                 }}></div>
               </div>
             </div>
-            <div className="mt-4 text-sm text-terminal-muted typing-welcome" style={{ animationDelay: '2.5s' }}>
+            <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-terminal-muted typing-welcome px-2" style={{ animationDelay: '2.5s' }}>
               <TypeWriter text="Welcome to Mohammad Abbass Terminal" />
             </div>
           </div>
@@ -313,30 +345,30 @@ export const Terminal = () => {
       
       <div className="max-w-6xl mx-auto relative z-10 p-4">
         {/* Welcome Section */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold mb-4" style={{ color: '#00aa00', textShadow: '0 0 8px rgba(0, 170, 0, 0.4)' }}>
+        <div className="mb-6 sm:mb-8 text-center px-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4" style={{ color: '#00aa00', textShadow: '0 0 8px rgba(0, 170, 0, 0.4)' }}>
             Welcome to Mohammad Abbass Portfolio
           </h1>
           <div className="text-terminal-text max-w-3xl mx-auto">
-            <p className="mb-4 text-lg">
+            <p className="mb-3 sm:mb-4 text-base sm:text-lg">
               🚀 Interactive Terminal Portfolio Experience
             </p>
-            <p className="mb-4">
+            <p className="mb-4 text-sm sm:text-base leading-relaxed">
               This is a fully functional terminal interface showcasing my skills, projects, and experience 
               in cybersecurity and software development. Navigate through my digital world using real terminal commands!
             </p>
-            <div className="grid md:grid-cols-3 gap-4 mt-6 text-sm">
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6 text-xs sm:text-sm">
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4">
                 <span className="text-terminal-accent font-semibold">💻 How to Navigate:</span>
-                <p className="mt-2">Type "help" to see all available commands</p>
+                <p className="mt-1 sm:mt-2">Type "help" to see all available commands</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-4">
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4">
                 <span className="text-terminal-accent font-semibold">🔍 Explore:</span>
-                <p className="mt-2">Use "ls" and "cd" to browse directories</p>
+                <p className="mt-1 sm:mt-2">Use "ls" and "cd" to browse directories</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-4">
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1">
                 <span className="text-terminal-accent font-semibold">🎯 Pro Tip:</span>
-                <p className="mt-2">Try "sudo access secrets" for a surprise!</p>
+                <p className="mt-1 sm:mt-2">Try "sudo access secrets" for a surprise!</p>
               </div>
             </div>
           </div>
@@ -361,8 +393,11 @@ export const Terminal = () => {
                 title="Green Theme (Default)"
               ></button>
             </div>
-            <div className="text-sm text-terminal-muted">
+            <div className="text-xs sm:text-sm text-terminal-muted hidden sm:block">
               root@abbass-portfolio ~ Mohammad Abbass Terminal v2.0
+            </div>
+            <div className="text-xs sm:text-sm text-terminal-muted sm:hidden">
+              Terminal v2.0
             </div>
             <div className="text-xs text-terminal-muted">
               <button onClick={clear} className="hover:text-terminal-accent transition-colors">
@@ -399,36 +434,36 @@ export const Terminal = () => {
         </div>
         
         {/* Footer Section */}
-        <div className="mt-8 text-center">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-4">
-              <h3 className="text-terminal-accent font-semibold mb-2">🎓 Education</h3>
-              <p className="text-sm">CS @ LIU University</p>
+        <div className="mt-6 sm:mt-8 text-center px-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">🎓 Education</h3>
+              <p className="text-xs sm:text-sm">CS @ LIU University</p>
               <p className="text-xs text-terminal-muted">GPA: 3.7/4.0</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-4">
-              <h3 className="text-terminal-accent font-semibold mb-2">🛡️ Expertise</h3>
-              <p className="text-sm">Cybersecurity</p>
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">🛡️ Expertise</h3>
+              <p className="text-xs sm:text-sm">Cybersecurity</p>
               <p className="text-xs text-terminal-muted">Ethical Hacking & AI</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-4">
-              <h3 className="text-terminal-accent font-semibold mb-2">🏆 Experience</h3>
-              <p className="text-sm">CTF Learning</p>
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">🏆 Experience</h3>
+              <p className="text-xs sm:text-sm">CTF Learning</p>
               <p className="text-xs text-terminal-muted">Security Internship</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-4">
-              <h3 className="text-terminal-accent font-semibold mb-2">📧 Connect</h3>
-              <p className="text-sm">Ready to collaborate?</p>
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">📧 Connect</h3>
+              <p className="text-xs sm:text-sm">Ready to collaborate?</p>
               <p className="text-xs text-terminal-muted">Type "cat contact.txt"</p>
             </div>
           </div>
           
-          <div className="text-terminal-muted text-sm">
-            <p className="mb-2">
+          <div className="text-terminal-muted text-xs sm:text-sm px-2">
+            <p className="mb-1 sm:mb-2">
               Built with React, TypeScript, and Terminal Magic ✨
             </p>
-            <p>
-              © 2025 Mohammad Abbass - Cybersecurity , AI/ML , & Full-Stack Developer
+            <p className="text-xs sm:text-sm">
+              © 2025 Mohammad Abbass - Cybersecurity, AI/ML, & Full-Stack Developer
             </p>
           </div>
         </div>
