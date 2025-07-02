@@ -528,7 +528,7 @@ export const commands: Record<string, Command> = {
           '💎 Secret Achievement: Portfolio Master',
           '',
           '📧 Impressed? Let\'s connect!',
-          '   Email: mhmmdabbass@gmail.com',
+          '   Email: mhmmd.h.abbass@gmail.com',
           '   Phone: +961 76 764 263',
           '',
           '💼 Ready to hire a cybersecurity expert?',

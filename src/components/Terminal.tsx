@@ -255,10 +255,9 @@ export const Terminal = () => {
   };
 
   const downloadResume = () => {
-    // Download the PDF resume
+    // Open the HTML CV in a new tab (can be printed as PDF)
     const link = document.createElement('a');
-    link.href = '/Mohammad_Abbass_Resume.pdf';
-    link.download = 'Mohammad_Abbass_Resume.pdf';
+    link.href = '/Mohammad_Abbass_CV.html';
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
