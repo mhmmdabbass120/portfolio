@@ -12,6 +12,8 @@ export const useTerminal = () => {
     currentInput: ''
   });
 
+  const [cursorPosition, setCursorPosition] = useState(0);
+
   const [output, setOutput] = useState<string[]>([
     '🚀 Welcome to <span class="mohammad-name">Mohammad</span> Abbass Terminal Portfolio',
     '═════════════════════════════════════════════',
@@ -105,6 +107,7 @@ export const useTerminal = () => {
     if (e.key === 'Enter') {
       const input = state.currentInput;
       setState(prev => ({ ...prev, currentInput: '' }));
+      setCursorPosition(0);
       executeCommand(input);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -112,11 +115,13 @@ export const useTerminal = () => {
         const newIndex = state.historyIndex === -1 
           ? state.history.length - 1 
           : Math.max(0, state.historyIndex - 1);
+        const newInput = state.history[newIndex] || '';
         setState(prev => ({
           ...prev,
           historyIndex: newIndex,
-          currentInput: prev.history[newIndex] || ''
+          currentInput: newInput
         }));
+        setCursorPosition(newInput.length);
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -124,62 +129,125 @@ export const useTerminal = () => {
         const newIndex = state.historyIndex + 1;
         if (newIndex >= state.history.length) {
           setState(prev => ({ ...prev, historyIndex: -1, currentInput: '' }));
+          setCursorPosition(0);
         } else {
+          const newInput = state.history[newIndex];
           setState(prev => ({
             ...prev,
             historyIndex: newIndex,
-            currentInput: prev.history[newIndex]
+            currentInput: newInput
           }));
+          setCursorPosition(newInput.length);
         }
       }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setCursorPosition(prev => Math.max(0, prev - 1));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setCursorPosition(prev => Math.min(state.currentInput.length, prev + 1));
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setCursorPosition(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setCursorPosition(state.currentInput.length);
     } else if (e.key === 'Tab') {
       e.preventDefault();
       // Auto-complete logic could go here
     } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
       // Handle Ctrl+C for copy
       e.preventDefault();
-      if (state.currentInput) {
-        navigator.clipboard.writeText(state.currentInput).then(() => {
+      const selectedText = window.getSelection()?.toString();
+      const textToCopy = selectedText || state.currentInput;
+      if (textToCopy) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
           setNotification('📋 Copied to clipboard!');
           setTimeout(() => setNotification(null), 2000);
-        }).catch(console.error);
+        }).catch(() => {
+          setNotification('❌ Copy failed - clipboard not available');
+          setTimeout(() => setNotification(null), 2000);
+        });
       }
     } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
       // Handle Ctrl+V for paste
       e.preventDefault();
       navigator.clipboard.readText().then(text => {
-        setState(prev => ({ ...prev, currentInput: prev.currentInput + text }));
-        setNotification('📋 Pasted from clipboard!');
+        if (text) {
+          const before = state.currentInput.substring(0, cursorPosition);
+          const after = state.currentInput.substring(cursorPosition);
+          const newInput = before + text + after;
+          setState(prev => ({ ...prev, currentInput: newInput }));
+          setCursorPosition(cursorPosition + text.length);
+          setNotification('📋 Pasted from clipboard!');
+          setTimeout(() => setNotification(null), 2000);
+        }
+      }).catch(() => {
+        setNotification('❌ Paste failed - clipboard not available');
         setTimeout(() => setNotification(null), 2000);
-      }).catch(console.error);
+      });
     } else if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
       // Handle Ctrl+A for select all
       e.preventDefault();
-      // In a real terminal, this would select all text in the current line
-      // For now, we'll just select the current input
-      if (inputRef.current) {
-        inputRef.current.select();
+      setCursorPosition(0);
+      setTimeout(() => setCursorPosition(state.currentInput.length), 0);
+    } else if (e.key === 'x' && (e.ctrlKey || e.metaKey)) {
+      // Handle Ctrl+X for cut
+      e.preventDefault();
+      if (state.currentInput) {
+        navigator.clipboard.writeText(state.currentInput).then(() => {
+          setState(prev => ({ ...prev, currentInput: '' }));
+          setCursorPosition(0);
+          setNotification('✂️ Cut to clipboard!');
+          setTimeout(() => setNotification(null), 2000);
+        }).catch(() => {
+          setNotification('❌ Cut failed - clipboard not available');
+          setTimeout(() => setNotification(null), 2000);
+        });
       }
-    } else if (e.key.length === 1) {
-      setState(prev => ({ ...prev, currentInput: prev.currentInput + e.key }));
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+      // Insert character at cursor position
+      const before = state.currentInput.substring(0, cursorPosition);
+      const after = state.currentInput.substring(cursorPosition);
+      const newInput = before + e.key + after;
+      setState(prev => ({ ...prev, currentInput: newInput }));
+      setCursorPosition(cursorPosition + 1);
     } else if (e.key === 'Backspace') {
-      setState(prev => ({ 
-        ...prev, 
-        currentInput: prev.currentInput.slice(0, -1) 
-      }));
+      if (cursorPosition > 0) {
+        const before = state.currentInput.substring(0, cursorPosition - 1);
+        const after = state.currentInput.substring(cursorPosition);
+        setState(prev => ({ 
+          ...prev, 
+          currentInput: before + after
+        }));
+        setCursorPosition(cursorPosition - 1);
+      }
+    } else if (e.key === 'Delete') {
+      if (cursorPosition < state.currentInput.length) {
+        const before = state.currentInput.substring(0, cursorPosition);
+        const after = state.currentInput.substring(cursorPosition + 1);
+        setState(prev => ({ 
+          ...prev, 
+          currentInput: before + after
+        }));
+      }
     }
-  }, [state, isTyping, executeCommand, inputRef]);
+  }, [state, isTyping, executeCommand, cursorPosition]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     
-    // Add paste event listener
+    // Add paste event listener for additional paste support
     const handlePaste = (e: ClipboardEvent) => {
       if (isTyping) return;
       
       const pastedText = e.clipboardData?.getData('text');
       if (pastedText) {
-        setState(prev => ({ ...prev, currentInput: prev.currentInput + pastedText }));
+        const before = state.currentInput.substring(0, cursorPosition);
+        const after = state.currentInput.substring(cursorPosition);
+        const newInput = before + pastedText + after;
+        setState(prev => ({ ...prev, currentInput: newInput }));
+        setCursorPosition(cursorPosition + pastedText.length);
         setNotification('📋 Pasted from clipboard!');
         setTimeout(() => setNotification(null), 2000);
       }
@@ -191,7 +259,7 @@ export const useTerminal = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('paste', handlePaste);
     };
-  }, [handleKeyDown, isTyping]);
+  }, [handleKeyDown, isTyping, state.currentInput, cursorPosition]);
 
   useEffect(() => {
     // Focus on mount but prevent scrolling
@@ -207,6 +275,7 @@ export const useTerminal = () => {
   return {
     output,
     currentInput: state.currentInput,
+    cursorPosition,
     prompt: getPrompt(),
     isTyping,
     clear,

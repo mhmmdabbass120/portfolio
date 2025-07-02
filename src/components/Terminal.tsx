@@ -25,7 +25,7 @@ const TypeWriter = ({ text }: { text: string }) => {
 };
 
 export const Terminal = () => {
-  const { output, currentInput, prompt, isTyping, clear, notification } = useTerminal();
+  const { output, currentInput, cursorPosition, prompt, isTyping, clear, notification } = useTerminal();
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showBootSequence, setShowBootSequence] = useState(true);
@@ -390,8 +390,11 @@ export const Terminal = () => {
             
             <div className="flex items-center mt-2">
               <span className="prompt" style={{ color: '#00cc00', textShadow: '0 0 4px rgba(0, 204, 0, 0.3)' }}>{prompt}</span>
-              <span className="ml-2 text-terminal-text typing-text">{currentInput}</span>
-              <span className="cursor ml-0.5 w-2 h-5 inline-block animate-blink"></span>
+              <span className="ml-2 text-terminal-text typing-text relative">
+                <span>{currentInput.substring(0, cursorPosition)}</span>
+                <span className="cursor w-2 h-5 inline-block animate-blink bg-terminal-accent absolute"></span>
+                <span className="ml-2">{currentInput.substring(cursorPosition)}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -411,7 +414,7 @@ export const Terminal = () => {
             </div>
             <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-4">
               <h3 className="text-terminal-accent font-semibold mb-2">🏆 Experience</h3>
-              <p className="text-sm">CTF Competitions</p>
+              <p className="text-sm">CTF Learning</p>
               <p className="text-xs text-terminal-muted">Security Internship</p>
             </div>
             <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-4">
