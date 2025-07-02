@@ -392,7 +392,6 @@ export const Terminal = () => {
               <span className="prompt" style={{ color: '#00cc00', textShadow: '0 0 4px rgba(0, 204, 0, 0.3)' }}>{prompt}</span>
               <span className="ml-2 text-terminal-text typing-text relative">
                 <span>{currentInput.substring(0, cursorPosition)}</span>
-                <span className="cursor w-2 h-5 inline-block animate-blink bg-terminal-accent absolute"></span>
                 <span className="ml-2">{currentInput.substring(cursorPosition)}</span>
               </span>
             </div>
