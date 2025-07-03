@@ -255,13 +255,15 @@ export const Terminal = () => {
   };
 
   const downloadResume = () => {
-    // Open the HTML CV in a new tab (can be printed as PDF)
-    const link = document.createElement('a');
-    link.href = '/Mohammad_Abbass_CV.html';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Open CV in new window and trigger print dialog for PDF download
+    const cvWindow = window.open('/Mohammad_Abbass_CV.html', '_blank');
+    if (cvWindow) {
+      cvWindow.addEventListener('load', () => {
+        setTimeout(() => {
+          cvWindow.print();
+        }, 500);
+      });
+    }
   };
 
   if (showBootSequence) {

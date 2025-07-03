@@ -543,8 +543,8 @@ export const filesystem: { [key: string]: FileSystemItem } = {
       '',
       '💼 Mohammad Abbass - Professional Resume',
       '',
-      '🔗 View/Download CV:',
-      '   📎 Click here to view CV: Mohammad_Abbass_CV.html',
+      '🔗 Download Professional CV:',
+      '   📎 Click here to download CV as PDF: Mohammad_Abbass_CV.html',
       '   📊 LinkedIn Profile: https://www.linkedin.com/in/mohammad-abbass-01485034a',
       '   🌐 GitHub: https://github.com/mhmmdabbass120',
       '',
@@ -558,7 +558,8 @@ export const filesystem: { [key: string]: FileSystemItem } = {
       '📧 For the most up-to-date resume, please email:',
       '   mhmmd.h.abbass@gmail.com',
       '',
-      '💡 CV can be printed as PDF from browser (Ctrl+P)',
+      '💡 Clicking CV link automatically opens print dialog for PDF download',
+      '💡 Choose "Save as PDF" in print dialog to download',
       ''
     ].join('\n')
   }
