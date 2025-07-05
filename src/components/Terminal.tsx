@@ -25,13 +25,22 @@ const TypeWriter = ({ text }: { text: string }) => {
 };
 
 export const Terminal = () => {
-  const { output, currentInput, cursorPosition, prompt, isTyping, clear, notification } = useTerminal();
+  const { output, currentInput, cursorPosition, prompt, isTyping, clear, notification, hasUsedTab } = useTerminal();
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showBootSequence, setShowBootSequence] = useState(true);
   const [bootComplete, setBootComplete] = useState(false);
   const [lastOutputLength, setLastOutputLength] = useState(0);
   const [currentTheme, setCurrentTheme] = useState('');
+  const [showTabHint, setShowTabHint] = useState(true);
+  const [codeSnippets] = useState([
+    'console.log("Hello World");',
+    'console.log("Welcome to my portfolio");',
+    'function hack() { return "access_granted"; }',
+    'const security = "enhanced";',
+    'console.log("System initialized");',
+    'npm install cybersecurity-tools'
+  ]);
 
   useEffect(() => {
     // Boot sequence animation
@@ -255,7 +264,7 @@ export const Terminal = () => {
   };
 
   const downloadResume = () => {
-    // Open CV in new window and trigger print dialog for PDF download
+    // Open CV in new window and trigger print dialog for Word document download
     const cvWindow = window.open('/Mohammad_Abbass_CV.html', '_blank');
     if (cvWindow) {
       cvWindow.addEventListener('load', () => {
@@ -338,44 +347,58 @@ export const Terminal = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-terminal-bg text-terminal-text relative overflow-hidden ${currentTheme}`}>
+    <div className={`min-h-screen bg-terminal-bg text-terminal-text relative overflow-hidden ${currentTheme} py-4 sm:py-6`}>
       {/* Matrix background animation */}
       <div className="matrix-rain"></div>
       <div className="matrix-rain-2"></div>
       <div className="matrix-rain-3"></div>
       
-      <div className="max-w-6xl mx-auto relative z-10 p-4">
+      {/* Floating code snippets */}
+      {codeSnippets.map((code, index) => (
+        <div
+          key={`code-${index}`}
+          className="floating-code"
+          style={{
+            left: `${(index * 15 + 10)}%`,
+            animationDelay: `${index * 3}s`,
+          }}
+        >
+          {code}
+        </div>
+      ))}
+      
+      <div className="max-w-6xl mx-auto relative z-10 p-4 pt-8 sm:pt-12 lg:pt-16">
         {/* Welcome Section */}
-        <div className="mb-6 sm:mb-8 text-center px-2">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4" style={{ color: '#00aa00', textShadow: '0 0 8px rgba(0, 170, 0, 0.4)' }}>
+        <div className="mb-6 sm:mb-8 text-center px-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 animate-glow-pulse" style={{ color: '#00aa00', textShadow: '0 0 8px rgba(0, 170, 0, 0.4)' }}>
             Welcome to Mohammad Abbass Portfolio
           </h1>
           <div className="text-terminal-text max-w-3xl mx-auto">
-            <p className="mb-3 sm:mb-4 text-base sm:text-lg">
+            <p className="mb-3 sm:mb-4 text-base sm:text-lg animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               🚀 Interactive Terminal Portfolio Experience
             </p>
-            <p className="mb-4 text-sm sm:text-base leading-relaxed">
+            <p className="mb-4 text-sm sm:text-base leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
               This is a fully functional terminal interface showcasing my skills, projects, and experience 
               in cybersecurity and software development. Navigate through my digital world using real terminal commands!
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6 text-xs sm:text-sm">
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4">
-                <span className="text-terminal-accent font-semibold">💻 How to Navigate:</span>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 animate-slide-in-left hover-enhance animate-hover-slide-glow cursor-pointer" style={{ animationDelay: '0.8s' }}>
+                <span className="text-terminal-accent font-semibold animate-text-glow">💻 How to Navigate:</span>
                 <p className="mt-1 sm:mt-2">Type "help" to see all available commands</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4">
-                <span className="text-terminal-accent font-semibold">🔍 Explore:</span>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 animate-slide-in-up hover-enhance animate-hover-pulse-color cursor-pointer" style={{ animationDelay: '1s' }}>
+                <span className="text-terminal-accent font-semibold animate-text-glow">🔍 Explore:</span>
                 <p className="mt-1 sm:mt-2">Use "ls" and "cd" to browse directories</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1">
-                <span className="text-terminal-accent font-semibold">🎯 Pro Tip:</span>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1 animate-slide-in-right hover-enhance animate-hover-shake cursor-pointer" style={{ animationDelay: '1.2s' }}>
+                <span className="text-terminal-accent font-semibold animate-text-glow">🎯 Pro Tip:</span>
                 <p className="mt-1 sm:mt-2">Try "sudo access secrets" for a surprise!</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="terminal-window">
+        <div className="terminal-window animate-fade-in-up" style={{ animationDelay: '1.6s' }}>
           <div className="terminal-header">
             <div className="terminal-buttons">
               <button 
@@ -414,6 +437,22 @@ export const Terminal = () => {
             </div>
           )}
           
+          {/* Tab Hint Notification */}
+          {showTabHint && bootComplete && !hasUsedTab && (
+            <div className="tab-hint-bar bg-blue-900/20 border border-blue-400/50 text-blue-300 px-3 py-1 text-xs animate-slide-in-up mb-2 flex items-center justify-between" style={{ animationDelay: '2s' }}>
+              <span>
+                💡 <strong>Pro Tip:</strong> Press <kbd className="bg-blue-800/50 px-1 py-0.5 rounded text-xs border border-blue-400/30 mx-1">Tab</kbd> to autocomplete commands and filenames!
+              </span>
+              <button 
+                onClick={() => setShowTabHint(false)}
+                className="ml-3 text-blue-300 hover:text-blue-100 transition-colors"
+                title="Dismiss hint"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          
           <div 
             ref={terminalRef}
             className="terminal-content"
@@ -437,34 +476,34 @@ export const Terminal = () => {
         {/* Footer Section */}
         <div className="mt-6 sm:mt-8 text-center px-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
-              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">🎓 Education</h3>
-              <p className="text-xs sm:text-sm">CS @ LIU University</p>
-              <p className="text-xs text-terminal-muted">GPA: 3.7/4.0</p>
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-glow cursor-pointer" style={{ animationDelay: '0.2s' }}>
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">🎓 Education</h3>
+              <p className="text-xs sm:text-sm">B.S. in CS @ LIU University</p>
+              <p className="text-xs text-terminal-muted">GPA: 3.7/4.0 (Graduate)</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
-              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">🛡️ Expertise</h3>
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-rotate cursor-pointer" style={{ animationDelay: '0.4s' }}>
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">🛡️ Learning</h3>
               <p className="text-xs sm:text-sm">Cybersecurity</p>
               <p className="text-xs text-terminal-muted">Ethical Hacking & AI</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
-              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">🏆 Experience</h3>
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-pulse-color cursor-pointer" style={{ animationDelay: '0.6s' }}>
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">🏆 Experience</h3>
               <p className="text-xs sm:text-sm">CTF Learning</p>
               <p className="text-xs text-terminal-muted">Security Internship</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4">
-              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base">📧 Connect</h3>
+            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-slide-glow cursor-pointer" style={{ animationDelay: '0.8s' }}>
+              <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">📧 Connect</h3>
               <p className="text-xs sm:text-sm">Ready to collaborate?</p>
               <p className="text-xs text-terminal-muted">Type "cat contact.txt"</p>
             </div>
           </div>
           
-          <div className="text-terminal-muted text-xs sm:text-sm px-2">
-            <p className="mb-1 sm:mb-2">
+          <div className="text-terminal-muted text-xs sm:text-sm px-2 animate-fade-in-up" style={{ animationDelay: '1s' }}>
+            <p className="mb-1 sm:mb-2 animate-fade-in-up" style={{ animationDelay: '1.2s' }}>
               Built with React, TypeScript, and Terminal Magic ✨
             </p>
-            <p className="text-xs sm:text-sm">
-              © 2025 Mohammad Abbass - Cybersecurity, AI/ML, & Full-Stack Developer
+            <p className="text-xs sm:text-sm animate-fade-in-up" style={{ animationDelay: '1.4s' }}>
+              © 2025 Mohammad Abbass - Aspiring Cybersecurity & AI/ML Professional, Full-Stack Developer
             </p>
           </div>
         </div>

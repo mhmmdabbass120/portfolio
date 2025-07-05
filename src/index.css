@@ -672,4 +672,365 @@
      textarea {
        font-size: 16px !important;
      }
-   }  
+   }
+
+/* Professional Animations */
+
+/* Fade in from bottom with delay support */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+/* Glowing pulse for main title */
+@keyframes glowPulse {
+  0%, 100% {
+    text-shadow: 0 0 8px rgba(0, 170, 0, 0.4), 0 0 16px rgba(0, 170, 0, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 12px rgba(0, 170, 0, 0.6), 0 0 24px rgba(0, 170, 0, 0.4), 0 0 32px rgba(0, 170, 0, 0.2);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+/* Slide in from different directions */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* Subtle bounce on hover */
+@keyframes subtleBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-subtle-bounce:hover {
+  animation: subtleBounce 0.4s ease-in-out;
+}
+
+/* Floating animation for footer boxes */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Subtle pulse on hover */
+@keyframes subtlePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-subtle-pulse:hover {
+  animation: subtlePulse 0.6s ease-in-out;
+}
+
+/* Enhanced hover effects */
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom shadows with terminal accent color */
+.hover\:shadow-terminal-accent\/20:hover {
+  box-shadow: 0 10px 25px -3px rgba(0, 170, 0, 0.2), 0 4px 6px -2px rgba(0, 170, 0, 0.1);
+}
+
+/* Advanced Hover Animations for Welcome Boxes */
+
+/* Glow effect on hover */
+@keyframes hoverGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 170, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 170, 0, 0.6), 0 0 30px rgba(0, 170, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(0, 170, 0, 0.3);
+  }
+}
+
+.animate-hover-glow:hover {
+  animation: hoverGlow 1.5s ease-in-out infinite;
+}
+
+/* Rotate and scale effect */
+@keyframes hoverRotateScale {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(1deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(-1deg) scale(1.05);
+  }
+}
+
+.animate-hover-rotate:hover {
+  animation: hoverRotateScale 0.8s ease-in-out infinite alternate;
+}
+
+/* Slide up with glow border */
+@keyframes hoverSlideGlow {
+  from {
+    transform: translateY(0) scale(1);
+    border-color: rgba(0, 170, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
+  }
+  to {
+    transform: translateY(-5px) scale(1.02);
+    border-color: rgba(0, 170, 0, 0.8);
+    background: rgba(0, 170, 0, 0.1);
+  }
+}
+
+.animate-hover-slide-glow:hover {
+  animation: hoverSlideGlow 0.3s ease-out forwards;
+}
+
+/* Pulse with color change */
+@keyframes hoverPulseColor {
+  0%, 100% {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(51, 51, 51, 1);
+    transform: scale(1);
+  }
+  50% {
+    background: rgba(0, 170, 0, 0.1);
+    border-color: rgba(0, 170, 0, 0.6);
+    transform: scale(1.03);
+  }
+}
+
+.animate-hover-pulse-color:hover {
+  animation: hoverPulseColor 0.6s ease-in-out infinite;
+}
+
+/* Shake effect */
+@keyframes hoverShake {
+  0%, 100% { transform: translateX(0) scale(1.05); }
+  10% { transform: translateX(-2px) scale(1.05); }
+  20% { transform: translateX(2px) scale(1.05); }
+  30% { transform: translateX(-2px) scale(1.05); }
+  40% { transform: translateX(2px) scale(1.05); }
+  50% { transform: translateX(-1px) scale(1.05); }
+  60% { transform: translateX(1px) scale(1.05); }
+  70% { transform: translateX(-1px) scale(1.05); }
+  80% { transform: translateX(1px) scale(1.05); }
+  90% { transform: translateX(0) scale(1.05); }
+}
+
+.animate-hover-shake:hover {
+  animation: hoverShake 0.6s ease-in-out;
+}
+
+/* Text glow effect */
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(0, 170, 0, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(0, 170, 0, 0.8), 0 0 15px rgba(0, 170, 0, 0.6);
+  }
+}
+
+.animate-text-glow:hover {
+  animation: textGlow 1s ease-in-out infinite;
+}
+
+/* Enhanced transition effects */
+.hover-enhance {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Shimmer effect */
+.hover-enhance::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 170, 0, 0.1), transparent);
+  transition: left 0.5s;
+  z-index: 1;
+}
+
+.hover-enhance:hover::before {
+  left: 100%;
+}
+
+/* Ripple effect */
+.hover-enhance::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(0, 170, 0, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hover-enhance:hover::after {
+  width: 100%;
+  height: 100%;
+}
+
+.hover-enhance > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Click feedback animation */
+@keyframes clickFeedback {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.hover-enhance:active {
+  animation: clickFeedback 0.1s ease-in-out;
+}
+
+  /* Floating code animation */
+  .floating-code {
+    position: fixed;
+    color: rgba(0, 170, 0, 0.15);
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1;
+    animation: floatCode 20s linear infinite;
+    user-select: none;
+  }
+
+  @keyframes floatCode {
+    0% {
+      transform: translateY(100vh) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-10vh) translateX(50px) rotate(5deg);
+      opacity: 0;
+    }
+  }
+
+  /* Responsive adjustments for mobile */
+  @media (max-width: 640px) {
+    .animate-fade-in-up,
+    .animate-slide-in-left,
+    .animate-slide-in-right,
+    .animate-slide-in-up {
+      animation-duration: 0.6s;
+    }
+    
+    .animate-float {
+      animation-duration: 4s;
+    }
+
+    /* Reduce hover effects on mobile for better performance */
+    .animate-hover-glow:hover,
+    .animate-hover-rotate:hover,
+    .animate-hover-pulse-color:hover {
+      animation-duration: 0.4s;
+    }
+
+    /* Smaller floating code on mobile */
+    .floating-code {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  }  

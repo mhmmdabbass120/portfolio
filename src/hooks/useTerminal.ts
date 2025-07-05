@@ -18,7 +18,7 @@ export const useTerminal = () => {
     '🚀 Welcome to <span class="mohammad-name">Mohammad</span> Abbass Terminal Portfolio',
     '═════════════════════════════════════════════',
     '',
-    '💻 CS Student | 🛡️ Cybersecurity | 🤖 AI/ML Enthusiast',
+    '💻 CS Graduate | 🛡️ Cybersecurity Enthusiast | 🤖 AI/ML Learner',
     '',
     '🎯 Type "help" to see available commands',
     '🔍 Type "ls" to explore the filesystem',
@@ -30,6 +30,7 @@ export const useTerminal = () => {
 
   const [isTyping, setIsTyping] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [hasUsedTab, setHasUsedTab] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const getCurrentDirectory = useCallback((): FileSystemItem | null => {
@@ -101,6 +102,62 @@ export const useTerminal = () => {
     }
   }, [state, getCurrentDirectory, getPrompt, addOutput]);
 
+  const handleTabCompletion = useCallback(() => {
+    const input = state.currentInput.trim();
+    const parts = input.split(' ');
+    const commandName = parts[0];
+    const args = parts.slice(1);
+    
+    // Mark that user has used Tab completion
+    setHasUsedTab(true);
+    
+    if (parts.length === 1) {
+      // Complete command names
+      const availableCommands = Object.keys(commands);
+      const matchingCommands = availableCommands.filter(cmd => 
+        cmd.toLowerCase().startsWith(commandName.toLowerCase())
+      );
+      
+      if (matchingCommands.length === 1) {
+        // Complete the command
+        setState(prev => ({ ...prev, currentInput: matchingCommands[0] + ' ' }));
+        setCursorPosition(matchingCommands[0].length + 1);
+      } else if (matchingCommands.length > 1) {
+        // Show available options
+        addOutput(`${getPrompt()} ${input}`);
+        addOutput('Available commands:');
+        addOutput(matchingCommands.map(cmd => `  ${cmd}`));
+        addOutput('');
+      }
+    } else if (parts.length === 2 && (commandName === 'cd' || commandName === 'ls' || commandName === 'cat')) {
+      // Complete file/directory names
+      const currentDir = getCurrentDirectory();
+      if (currentDir) {
+        const query = args[0].toLowerCase();
+        const matchingItems = Object.entries(currentDir)
+          .filter(([name, item]) => !item.hidden && name.toLowerCase().startsWith(query))
+          .map(([name]) => name);
+        
+        if (matchingItems.length === 1) {
+          // Complete the file/directory name
+          const completed = `${commandName} ${matchingItems[0]}`;
+          setState(prev => ({ ...prev, currentInput: completed }));
+          setCursorPosition(completed.length);
+        } else if (matchingItems.length > 1) {
+          // Show available options
+          addOutput(`${getPrompt()} ${input}`);
+          addOutput('Available options:');
+          addOutput(matchingItems.map(item => {
+            const itemData = currentDir[item];
+            const icon = itemData.type === 'directory' ? '📁' : '📄';
+            return `  ${icon} ${item}`;
+          }));
+          addOutput('');
+        }
+      }
+    }
+  }, [state.currentInput, getCurrentDirectory, getPrompt, addOutput]);
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (isTyping) return;
 
@@ -154,7 +211,7 @@ export const useTerminal = () => {
       setCursorPosition(state.currentInput.length);
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      // Auto-complete logic could go here
+      handleTabCompletion();
     } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
       // Handle Ctrl+C for copy
       e.preventDefault();
@@ -232,7 +289,7 @@ export const useTerminal = () => {
         }));
       }
     }
-  }, [state, isTyping, executeCommand, cursorPosition]);
+  }, [state, isTyping, executeCommand, cursorPosition, handleTabCompletion]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -282,6 +339,7 @@ export const useTerminal = () => {
     executeCommand,
     inputRef,
     state,
-    notification
+    notification,
+    hasUsedTab
   };
 };
