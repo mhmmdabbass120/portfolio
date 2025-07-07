@@ -91,6 +91,13 @@ export const Terminal = () => {
     return () => document.removeEventListener('click', handleClick);
   }, [isTyping, bootComplete]);
 
+  useEffect(() => {
+    // Auto-focus input on boot complete
+    if (bootComplete && inputRef.current) {
+      inputRef.current.focus({ preventScroll: true });
+    }
+  }, [bootComplete]);
+
   const renderTerminalLine = (line: string) => {
     // Handle HTML content like the Mohammad name span and help titles
     if (line.includes('<span class="mohammad-name">') || line.includes('<span class="help-title">')) {
@@ -463,11 +470,12 @@ export const Terminal = () => {
               </div>
             ))}
             
-            <div className="flex items-center mt-2">
+                        <div className="flex items-center mt-2">
               <span className="prompt" style={{ color: '#00cc00', textShadow: '0 0 4px rgba(0, 204, 0, 0.3)' }}>{prompt}</span>
-              <span className="ml-2 text-terminal-text typing-text relative">
+              <span className="ml-2 text-terminal-text relative">
                 <span>{currentInput.substring(0, cursorPosition)}</span>
-                <span className="ml-2">{currentInput.substring(cursorPosition)}</span>
+                <span className="cursor-blink">|</span>
+                <span>{currentInput.substring(cursorPosition)}</span>
               </span>
             </div>
           </div>
@@ -508,21 +516,24 @@ export const Terminal = () => {
           </div>
         </div>
         
-        {/* Hidden input for capturing keystrokes */}
+        {/* Hidden input for keyboard capture - positioned to be accessible on mobile */}
         <input
           ref={inputRef}
-          className="opacity-0 absolute pointer-events-none"
+          className="fixed opacity-0 pointer-events-auto"
           style={{
             position: 'fixed',
-            top: '-9999px',
-            left: '-9999px',
-            width: '1px',
-            height: '1px',
+            bottom: '0px',
+            left: '0px',
+            width: '100%',
+            height: '50px',
             border: 'none',
             outline: 'none',
             background: 'transparent',
-            zIndex: -1,
-            textTransform: 'none'
+            zIndex: 9999,
+            fontSize: '16px', // Prevents zoom on iOS
+            textTransform: 'none',
+            color: 'transparent',
+            caretColor: 'transparent'
           }}
           autoFocus
           autoCapitalize="off"
@@ -537,19 +548,19 @@ export const Terminal = () => {
           value=""
           onChange={() => {}} // Handled by useTerminal hook
           onInput={(e) => {
-            // Additional mobile handling
             const target = e.target as HTMLInputElement;
             if (target.value) {
-              // Force clear the input to prevent accumulation
               target.value = '';
             }
           }}
           onFocus={(e) => {
-            // Prevent any scroll behavior when input gets focus
-            e.preventDefault();
+            // Don't prevent default on mobile - let the keyboard show
             const target = e.target as HTMLInputElement;
-            target.blur();
-            target.focus({ preventScroll: true });
+            target.style.opacity = '0';
+          }}
+          onBlur={(e) => {
+            const target = e.target as HTMLInputElement;
+            target.style.opacity = '0';
           }}
         />
       </div>

@@ -291,6 +291,8 @@ export const useTerminal = () => {
     }
   }, [state, isTyping, executeCommand, cursorPosition, handleTabCompletion]);
 
+
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     

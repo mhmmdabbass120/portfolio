@@ -1034,3 +1034,28 @@
       opacity: 0.8;
     }
   }  
+
+/* Add cursor animation for terminal */
+.cursor-blink {
+  animation: blink 1s infinite;
+  color: #00cc00;
+  text-shadow: 0 0 4px rgba(0, 204, 0, 0.3);
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 768px) {
+  /* Improve touch targets on mobile */
+  .terminal-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}  
