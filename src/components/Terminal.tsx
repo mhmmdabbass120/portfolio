@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTerminal } from '../hooks/useTerminal';
+import { filesystem } from '../data/filesystem';
 
 // TypeWriter component for typing animation
 const TypeWriter = ({ text }: { text: string }) => {
@@ -25,11 +26,13 @@ const TypeWriter = ({ text }: { text: string }) => {
 };
 
 export const Terminal = () => {
-  const { output, currentInput, cursorPosition, prompt, isTyping, clear, notification, hasUsedTab } = useTerminal();
+  const { output, currentInput, cursorPosition, prompt, isTyping, clear, notification, hasUsedTab, executeCommand, state } = useTerminal();
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showBootSequence, setShowBootSequence] = useState(true);
   const [bootComplete, setBootComplete] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(false);
   const [lastOutputLength, setLastOutputLength] = useState(0);
   const [currentTheme, setCurrentTheme] = useState('');
   const [showTabHint, setShowTabHint] = useState(true);
@@ -43,18 +46,34 @@ export const Terminal = () => {
   ]);
 
   useEffect(() => {
-    // Boot sequence animation
+    // Boot sequence animation with smooth transition
     const bootTimer = setTimeout(() => {
-      setShowBootSequence(false);
-      setTimeout(() => setBootComplete(true), 500);
+      // Start transition
+      setIsTransitioning(true);
+      
+      // Fade out boot sequence
+      setTimeout(() => {
+        setShowBootSequence(false);
+      }, 800);
+      
+      // Show terminal with fade-in
+      setTimeout(() => {
+        setShowTerminal(true);
+      }, 1200);
+      
+      // Complete transition
+      setTimeout(() => {
+        setBootComplete(true);
+        setIsTransitioning(false);
+      }, 1800);
     }, 6000);
 
     return () => clearTimeout(bootTimer);
   }, []);
 
   useEffect(() => {
-    // Only auto-scroll when new output is actually added (not when typing)
-    if (terminalRef.current && output.length > lastOutputLength) {
+    // Only auto-scroll when new output is actually added (not when typing) and terminal is fully loaded
+    if (terminalRef.current && output.length > lastOutputLength && bootComplete && !isTransitioning) {
       const scrollElement = terminalRef.current;
       const isNearBottom = scrollElement.scrollHeight - scrollElement.clientHeight <= scrollElement.scrollTop + 100;
       
@@ -65,7 +84,7 @@ export const Terminal = () => {
       }
       setLastOutputLength(output.length);
     }
-  }, [output.length, lastOutputLength]);
+  }, [output.length, lastOutputLength, bootComplete, isTransitioning]);
 
   useEffect(() => {
     // Keep input focused but don't interfere with scrolling
@@ -92,11 +111,49 @@ export const Terminal = () => {
   }, [isTyping, bootComplete]);
 
   useEffect(() => {
-    // Auto-focus input on boot complete
+    // Auto-focus input and scroll to top on boot complete
     if (bootComplete && inputRef.current) {
       inputRef.current.focus({ preventScroll: true });
+      
+      // Scroll to top of the page when terminal loads
+      if (terminalRef.current) {
+        terminalRef.current.scrollTop = 0;
+      }
+      // Also scroll the window to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [bootComplete]);
+
+  // Add percentage animation effect
+  useEffect(() => {
+    if (showBootSequence) {
+      const animatePercentages = () => {
+        const percentageElements = document.querySelectorAll('.percentage, .main-percentage');
+        
+        percentageElements.forEach((element, index) => {
+          const target = parseInt(element.getAttribute('data-target') || '100');
+          const delay = index * 500 + 500; // Staggered animation
+          
+          setTimeout(() => {
+            let current = 0;
+            const increment = target / 50; // 50 steps for smooth animation
+            const timer = setInterval(() => {
+              current += increment;
+              if (current >= target) {
+                current = target;
+                clearInterval(timer);
+              }
+              element.textContent = Math.floor(current).toString();
+            }, 30); // Update every 30ms
+          }, delay);
+        });
+      };
+
+      // Start percentage animation after component mounts
+      const timer = setTimeout(animatePercentages, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showBootSequence]);
 
   const renderTerminalLine = (line: string) => {
     // Handle HTML content like the Mohammad name span and help titles
@@ -282,11 +339,14 @@ export const Terminal = () => {
     }
   };
 
-  if (showBootSequence) {
+  if (showBootSequence && !isTransitioning) {
     return (
       <div className="min-h-screen bg-terminal-bg text-terminal-text px-2 py-4 sm:p-4 flex items-center justify-center boot-container">
-        <div className="text-center boot-content w-full max-w-4xl">
-          <div className="ascii-art mb-6 sm:mb-8 text-terminal-accent glowing-ascii overflow-x-auto">
+        {/* Subtle background pattern */}
+        <div className="circuit-bg opacity-30"></div>
+        
+        <div className="text-center boot-content w-full max-w-4xl relative z-10">
+          <div className="ascii-art mb-6 sm:mb-8 text-green-400 glowing-ascii">
             {/* Desktop ASCII Art */}
             <pre className="hidden md:block text-base lg:text-lg font-mono whitespace-pre">
 {`
@@ -312,40 +372,97 @@ export const Terminal = () => {
 `}
             </pre>
             
-            {/* Mobile ASCII Art - Simplified */}
-            <div className="block sm:hidden">
-              <div className="text-2xl sm:text-3xl font-bold mb-2 tracking-wider">
-                MOHAMMAD
-              </div>
-              <div className="text-lg font-bold tracking-widest">
-                ABBASS
-              </div>
+            {/* Mobile ASCII Art */}
+            <div className="block sm:hidden mobile-ascii">
+              <pre className="text-sm font-mono whitespace-pre mobile-ascii-art">
+{`
+ ███▄ ▄███▓ ▒█████   ██░ ██  ▄▄▄      
+▓██▒▀█▀ ██▒▒██▒  ██▒▓██░ ██▒▒████▄    
+▓██    ▓██░▒██░  ██▒▒██▀▀██░▒██  ▀█▄  
+▒██    ▒██ ▒██   ██░░▓█ ░██ ░██▄▄▄▄██ 
+▒██▒   ░██▒░ ████▓▒░░▓█▒░██▓ ▓█   ▓██▒
+░ ▒░   ░  ░░ ▒░▒░▒░  ▒ ░░▒░▒ ▒▒   ▓▒█░
+░  ░      ░  ░ ▒ ▒░  ▒ ░▒░ ░  ▒   ▒▒ ░
+
+        ▄▄▄       ▄▄▄▄    ▄▄▄▄    ▄▄▄       ██████   ██████ 
+       ▒████▄    ▓█████▄ ▓█████▄ ▒████▄   ▒██    ▒ ▒██    ▒ 
+       ▒██  ▀█▄  ▒██▒ ▄██▒██▒ ▄██▒██  ▀█▄ ░ ▓██▄   ░ ▓██▄   
+       ░██▄▄▄▄██ ▒██░█▀  ▒██░█▀  ░██▄▄▄▄██  ▒   ██▒  ▒   ██▒
+        ▓█   ▓██▒░▓█  ▀█▓░▓█  ▀█▓ ▓█   ▓██▒▒██████▒▒▒██████▒▒
+        ▒▒   ▓▒█░░▒▓███▀▒░▒▓███▀▒ ▒▒   ▓▒█░▒ ▒▓▒ ▒ ░▒ ▒▓▒ ▒ ░
+         ▒   ▒▒ ░▒░▒   ░ ▒░▒   ░  ▒   ▒▒ ░░ ░▒  ░ ░░ ░▒  ░ ░
+         ░   ▒    ░    ░  ░    ░  ░   ▒   ░  ░  ░  ░  ░  ░  
+             ░  ░ ░       ░           ░  ░      ░        ░  
+                       ░                                   
+`}
+              </pre>
             </div>
           </div>
           
           <div className="boot-sequence text-terminal-accent glowing-text px-2">
-            <div className="mb-2 sm:mb-3 boot-item text-xs sm:text-sm md:text-base" style={{ animationDelay: '0.5s' }}>
-              🔐 <span className="hidden sm:inline">INITIALIZING SECURE TERMINAL...</span>
-              <span className="sm:hidden">INITIALIZING...</span>
+            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '0.5s' }}>
+              <span><span className="text-terminal-accent">{'>'}</span> Initializing secure terminal...</span>
+              <span className="text-terminal-muted">
+                [<span className="percentage" data-target="100">0</span>%] 
+                <span className="status-ok ml-1">[OK]</span>
+              </span>
             </div>
-            <div className="mb-2 sm:mb-3 boot-item text-xs sm:text-sm md:text-base" style={{ animationDelay: '1s' }}>
-              🛡️ <span className="hidden sm:inline">LOADING CYBERSECURITY PROTOCOLS...</span>
-              <span className="sm:hidden">LOADING PROTOCOLS...</span>
+            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '1s' }}>
+              <span><span className="text-terminal-accent">{'>'}</span> Loading cybersecurity protocols...</span>
+              <span className="text-terminal-muted">
+                [<span className="percentage" data-target="100">0</span>%] 
+                <span className="status-ok ml-1">[OK]</span>
+              </span>
             </div>
-            <div className="mb-2 sm:mb-3 boot-item text-xs sm:text-sm md:text-base" style={{ animationDelay: '1.5s' }}>
-              🚀 <span className="hidden sm:inline">ESTABLISHING CONNECTION...</span>
-              <span className="sm:hidden">CONNECTING...</span>
+            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '1.5s' }}>
+              <span><span className="text-terminal-accent">{'>'}</span> Establishing connection...</span>
+              <span className="text-terminal-muted">
+                [<span className="percentage" data-target="100">0</span>%] 
+                <span className="status-ok ml-1">[OK]</span>
+              </span>
             </div>
-            <div className="loading-bar mt-3 sm:mt-4 boot-item px-4 sm:px-8" style={{ animationDelay: '2s' }}>
-              <div className="bg-terminal-border h-2 rounded">
-                <div className="bg-terminal-accent h-2 rounded animate-pulse glowing-progress" style={{
-                  width: '100%',
-                  animation: 'loadingBar 3s ease-in-out'
+            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '2s' }}>
+              <span><span className="text-terminal-accent">{'>'}</span> Compiling portfolio interface...</span>
+              <span className="text-terminal-muted">
+                [<span className="percentage" data-target="100">0</span>%] 
+                <span className="status-ok ml-1">[OK]</span>
+              </span>
+            </div>
+
+            
+            <div className="loading-bar mt-6 sm:mt-8 boot-item px-4 sm:px-8" style={{ animationDelay: '2s' }}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-terminal-muted">Loading Progress:</span>
+                <span className="text-xs text-terminal-accent">
+                  <span className="main-percentage" data-target="100">0</span>%
+                </span>
+              </div>
+              <div className="bg-terminal-border h-2 rounded relative overflow-hidden">
+                <div className="bg-terminal-accent h-2 rounded glowing-progress animated-progress-bar" style={{
+                  width: '0%',
+                  animation: 'loadingBarFill 3s ease-in-out forwards'
                 }}></div>
               </div>
             </div>
-            <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-terminal-muted typing-welcome px-2" style={{ animationDelay: '2.5s' }}>
+            
+            <div className="mt-6 sm:mt-8 text-xs sm:text-sm text-terminal-muted typing-welcome px-2" style={{ animationDelay: '3.2s' }}>
               <TypeWriter text="Welcome to Mohammad Abbass Terminal" />
+            </div>
+            
+            {/* Clean status indicators */}
+            <div className="mt-6 flex justify-center space-x-6 text-xs opacity-75" style={{ animationDelay: '3.5s' }}>
+              <div className="boot-item flex items-center space-x-2">
+                <span className="w-2 h-2 bg-terminal-accent rounded-full animate-pulse"></span>
+                <span className="text-terminal-muted">SECURE</span>
+              </div>
+              <div className="boot-item flex items-center space-x-2">
+                <span className="w-2 h-2 bg-terminal-accent rounded-full animate-pulse"></span>
+                <span className="text-terminal-muted">READY</span>
+              </div>
+              <div className="boot-item flex items-center space-x-2">
+                <span className="w-2 h-2 bg-terminal-accent rounded-full animate-pulse"></span>
+                <span className="text-terminal-muted">ONLINE</span>
+              </div>
             </div>
           </div>
         </div>
@@ -353,8 +470,72 @@ export const Terminal = () => {
     );
   }
 
+  // Transition overlay
+  if (isTransitioning) {
+    return (
+      <div className="min-h-screen bg-terminal-bg text-terminal-text flex items-center justify-center transition-container">
+        <div className="transition-overlay">
+          {/* Boot sequence fade-out */}
+          {showBootSequence && (
+            <div className="absolute inset-0 flex items-center justify-center boot-fade-out">
+              <div className="circuit-bg opacity-30"></div>
+                             <div className="text-center boot-content w-full max-w-4xl relative z-10 transition-boot-out">
+                 <div className="ascii-art mb-6 sm:mb-8 text-green-400 glowing-ascii">
+                   <div className="block sm:hidden mobile-ascii">
+                     <pre className="text-xs font-mono whitespace-pre mobile-ascii-art">
+{`
+ ███▄ ▄███▓ ▒█████   ██░ ██  ▄▄▄      
+▓██▒▀█▀ ██▒▒██▒  ██▒▓██░ ██▒▒████▄    
+▓██    ▓██░▒██░  ██▒▒██▀▀██░▒██  ▀█▄  
+▒██    ▒██ ▒██   ██░░▓█ ░██ ░██▄▄▄▄██ 
+▒██▒   ░██▒░ ████▓▒░░▓█▒░██▓ ▓█   ▓██▒
+
+        ▄▄▄       ▄▄▄▄    ▄▄▄▄    ▄▄▄       ██████   ██████ 
+       ▒████▄    ▓█████▄ ▓█████▄ ▒████▄   ▒██    ▒ ▒██    ▒ 
+       ▒██  ▀█▄  ▒██▒ ▄██▒██▒ ▄██▒██  ▀█▄ ░ ▓██▄   ░ ▓██▄   
+       ░██▄▄▄▄██ ▒██░█▀  ▒██░█▀  ░██▄▄▄▄██  ▒   ██▒  ▒   ██▒
+        ▓█   ▓██▒░▓█  ▀█▓░▓█  ▀█▓ ▓█   ▓██▒▒██████▒▒▒██████▒▒
+`}
+                     </pre>
+                   </div>
+                 </div>
+                <div className="text-center text-terminal-accent">
+                  <div className="loading-dots">
+                    <span>Initializing Terminal Interface</span>
+                    <span className="dots">
+                      <span>.</span><span>.</span><span>.</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Terminal fade-in */}
+          {showTerminal && (
+            <div className="absolute inset-0 terminal-fade-in">
+              <div className="matrix-rain opacity-50"></div>
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="terminal-loading mb-6">
+                    <div className="text-2xl sm:text-3xl font-bold text-green-400 mb-4 animate-pulse">
+                      ⚡ TERMINAL READY ⚡
+                    </div>
+                    <div className="bg-terminal-border h-1 w-64 mx-auto rounded overflow-hidden">
+                      <div className="bg-terminal-accent h-1 loading-bar-final"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`min-h-screen bg-terminal-bg text-terminal-text relative overflow-hidden ${currentTheme} py-4 sm:py-6`}>
+    <div className={`min-h-screen bg-terminal-bg text-terminal-text relative overflow-hidden ${currentTheme} py-4 sm:py-6 ${bootComplete ? 'terminal-entrance' : ''}`}>
       {/* Matrix background animation */}
       <div className="matrix-rain"></div>
       <div className="matrix-rain-2"></div>
@@ -470,7 +651,7 @@ export const Terminal = () => {
               </div>
             ))}
             
-                        <div className="flex items-center mt-2">
+            <div className="flex items-center mt-2">
               <span className="prompt" style={{ color: '#00cc00', textShadow: '0 0 4px rgba(0, 204, 0, 0.3)' }}>{prompt}</span>
               <span className="ml-2 text-terminal-text relative">
                 <span>{currentInput.substring(0, cursorPosition)}</span>
@@ -484,33 +665,154 @@ export const Terminal = () => {
         {/* Footer Section */}
         <div className="mt-6 sm:mt-8 text-center px-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-glow cursor-pointer" style={{ animationDelay: '0.2s' }}>
+            <div className="info-box bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer" style={{ animationDelay: '0.2s' }}>
               <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">🎓 Education</h3>
               <p className="text-xs sm:text-sm">B.S. in CS @ LIU University</p>
               <p className="text-xs text-terminal-muted">GPA: 3.7/4.0 (Graduate)</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-rotate cursor-pointer" style={{ animationDelay: '0.4s' }}>
+            <div className="info-box bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer" style={{ animationDelay: '0.4s' }}>
               <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">🛡️ Learning</h3>
               <p className="text-xs sm:text-sm">Cybersecurity</p>
               <p className="text-xs text-terminal-muted">Ethical Hacking & AI</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-pulse-color cursor-pointer" style={{ animationDelay: '0.6s' }}>
+            <div className="info-box bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer" style={{ animationDelay: '0.6s' }}>
               <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">🏆 Experience</h3>
               <p className="text-xs sm:text-sm">CTF Learning</p>
               <p className="text-xs text-terminal-muted">Security Internship</p>
             </div>
-            <div className="bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 animate-float hover-enhance animate-hover-slide-glow cursor-pointer" style={{ animationDelay: '0.8s' }}>
+            <div className="info-box bg-terminal-bg/30 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer" style={{ animationDelay: '0.8s' }}>
               <h3 className="text-terminal-accent font-semibold mb-1 sm:mb-2 text-sm sm:text-base animate-text-glow">📧 Connect</h3>
               <p className="text-xs sm:text-sm">Ready to collaborate?</p>
               <p className="text-xs text-terminal-muted">Type "cat contact.txt"</p>
             </div>
           </div>
           
-          <div className="text-terminal-muted text-xs sm:text-sm px-2 animate-fade-in-up" style={{ animationDelay: '1s' }}>
-            <p className="mb-1 sm:mb-2 animate-fade-in-up" style={{ animationDelay: '1.2s' }}>
+          {/* Visual File Browser Section */}
+          <div className="mt-8 sm:mt-12 px-2 animate-fade-in-up" style={{ animationDelay: '1.6s' }}>
+            <div className="text-center mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-2 text-terminal-accent animate-text-glow">
+                🖱️ Visual File Explorer
+              </h2>
+              <p className="text-sm sm:text-base text-terminal-muted">
+                Don't like typing commands? Simply click on any directory or file below!
+              </p>
+              <p className="text-xs sm:text-sm text-terminal-muted mt-1 opacity-75">
+                📁 Directories: Navigate • 📄 Files: View content (auto-scroll to terminal)
+              </p>
+            </div>
+            
+            {/* Current Path Display */}
+            <div className="mb-4 text-center">
+              <span className="text-terminal-accent font-semibold">Current Location: </span>
+              <span className="text-terminal-text">
+                ~/{state.currentPath.length === 0 ? '' : state.currentPath.join('/')}
+              </span>
+            </div>
+            
+            {/* File Browser Grid */}
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
+                {/* Back Button (if not in root) */}
+                {state.currentPath.length > 0 && (
+                  <div 
+                    key="back"
+                    className="file-item bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300 hover:scale-105"
+                    data-type="directory"
+                    onClick={() => executeCommand('cd ..')}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl sm:text-3xl mb-2">⬅️</div>
+                      <div className="text-xs sm:text-sm text-terminal-accent font-semibold truncate">
+                        Back
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Current Directory Contents */}
+                {(() => {
+                  // Get current directory contents
+                  let current: any = filesystem;
+                  for (const path of state.currentPath) {
+                    if (current[path] && current[path].children) {
+                      current = current[path].children;
+                    }
+                  }
+                  
+                  return Object.entries(current || {})
+                    .filter(([name, item]: [string, any]) => !item.hidden)
+                    .map(([name, item]: [string, any]) => (
+                      <div 
+                        key={name}
+                        className="file-item bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300 hover:scale-105"
+                        data-type={item.type}
+                        onClick={() => {
+                          if (item.type === 'directory') {
+                            executeCommand(`cd ${name}`);
+                          } else {
+                            executeCommand(`cat ${name}`);
+                            // Scroll to terminal after a brief delay to let the command execute
+                            setTimeout(() => {
+                              // First scroll the terminal into view
+                              terminalRef.current?.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                              });
+                              // Then scroll to the bottom of the terminal content to show the new output
+                              setTimeout(() => {
+                                if (terminalRef.current) {
+                                  terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+                                }
+                              }, 500);
+                            }, 100);
+                          }
+                        }}
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl sm:text-3xl mb-2">
+                            {item.type === 'directory' ? '📁' : '📄'}
+                          </div>
+                          <div className="text-xs sm:text-sm text-terminal-text font-semibold truncate" title={name}>
+                            {name}
+                          </div>
+                          <div className="text-xs text-terminal-muted mt-1">
+                            {item.type === 'directory' ? 'Directory' : 'File'}
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                })()}
+              </div>
+              
+              {/* Quick Actions */}
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <button
+                  onClick={() => executeCommand('ls')}
+                  className="bg-terminal-bg/60 border border-terminal-border rounded-lg px-3 py-2 text-xs sm:text-sm text-terminal-accent hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300"
+                >
+                  📋 List Contents
+                </button>
+                <button
+                  onClick={() => executeCommand('pwd')}
+                  className="bg-terminal-bg/60 border border-terminal-border rounded-lg px-3 py-2 text-xs sm:text-sm text-terminal-accent hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300"
+                >
+                  📍 Show Location
+                </button>
+                <button
+                  onClick={() => executeCommand('help')}
+                  className="bg-terminal-bg/60 border border-terminal-border rounded-lg px-3 py-2 text-xs sm:text-sm text-terminal-accent hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300"
+                >
+                  ❓ Show Help
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-terminal-muted text-xs sm:text-sm px-2 animate-fade-in-up mt-8" style={{ animationDelay: '1.8s' }}>
+            <p className="mb-1 sm:mb-2 animate-fade-in-up" style={{ animationDelay: '2s' }}>
               Built with React, TypeScript, and Terminal Magic ✨
             </p>
-            <p className="text-xs sm:text-sm animate-fade-in-up" style={{ animationDelay: '1.4s' }}>
+            <p className="text-xs sm:text-sm animate-fade-in-up" style={{ animationDelay: '2.2s' }}>
               © 2025 Mohammad Abbass - Aspiring Cybersecurity & AI/ML Professional, Full-Stack Developer
             </p>
           </div>

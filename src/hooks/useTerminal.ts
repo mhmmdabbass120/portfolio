@@ -18,7 +18,7 @@ export const useTerminal = () => {
     '🚀 Welcome to <span class="mohammad-name">Mohammad</span> Abbass Terminal Portfolio',
     '═════════════════════════════════════════════',
     '',
-    '💻 CS Graduate | 🛡️ Cybersecurity Enthusiast | 🤖 AI/ML Learner',
+    '💻 CS Graduate | 🛡️ Cybersecurity Learner | 🤖 AI/ML Learner',
     '',
     '🎯 Type "help" to see available commands',
     '🔍 Type "ls" to explore the filesystem',
