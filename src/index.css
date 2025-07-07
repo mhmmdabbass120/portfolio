@@ -1053,9 +1053,21 @@
 
 /* Enhanced mobile responsiveness */
 @media (max-width: 768px) {
-  /* Improve touch targets on mobile */
+  /* Make terminal buttons smaller on mobile */
   .terminal-button {
-    min-height: 44px;
-    min-width: 44px;
+    width: 10px;
+    height: 10px;
+    min-height: unset;
+    min-width: unset;
+  }
+  
+  /* Adjust button container spacing */
+  .terminal-buttons {
+    gap: 6px;
+  }
+  
+  /* Reduce hover scale effect on mobile */
+  .terminal-button:hover {
+    transform: scale(1.1);
   }
 }  
