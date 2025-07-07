@@ -158,6 +158,15 @@ export const useTerminal = () => {
     }
   }, [state.currentInput, getCurrentDirectory, getPrompt, addOutput]);
 
+  // Enhanced input handling for Android compatibility
+  const handleInputChange = useCallback((newValue: string) => {
+    // Ensure we handle all types of input changes
+    if (newValue !== state.currentInput) {
+      setState(prev => ({ ...prev, currentInput: newValue }));
+      setCursorPosition(newValue.length);
+    }
+  }, [state.currentInput]);
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (isTyping) return;
 
@@ -294,6 +303,7 @@ export const useTerminal = () => {
 
 
   useEffect(() => {
+    // Enhanced event handling for Android compatibility
     window.addEventListener('keydown', handleKeyDown);
     
     // Add paste event listener for additional paste support
@@ -305,25 +315,70 @@ export const useTerminal = () => {
         const before = state.currentInput.substring(0, cursorPosition);
         const after = state.currentInput.substring(cursorPosition);
         const newInput = before + pastedText + after;
-        setState(prev => ({ ...prev, currentInput: newInput }));
-        setCursorPosition(cursorPosition + pastedText.length);
+        handleInputChange(newInput);
         setNotification('📋 Pasted from clipboard!');
         setTimeout(() => setNotification(null), 2000);
       }
     };
     
+    // Android-specific input detection
+    const handleAndroidInput = (e: Event) => {
+      if (isTyping || !inputRef.current) return;
+      
+      // Force sync with hidden input value for Android
+      const inputElement = inputRef.current;
+      const currentValue = inputElement.value;
+      
+      if (currentValue !== state.currentInput) {
+        handleInputChange(currentValue);
+      }
+    };
+    
+    // Enhanced Android support with multiple event listeners
     window.addEventListener('paste', handlePaste);
+    window.addEventListener('input', handleAndroidInput);
+    
+    // Periodic sync for Android virtual keyboards (fallback)
+    const androidSyncInterval = setInterval(() => {
+      if (inputRef.current && document.activeElement === inputRef.current) {
+        const currentValue = inputRef.current.value;
+        if (currentValue !== state.currentInput) {
+          handleInputChange(currentValue);
+        }
+      }
+    }, 100);
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('paste', handlePaste);
+      window.removeEventListener('input', handleAndroidInput);
+      clearInterval(androidSyncInterval);
     };
-  }, [handleKeyDown, isTyping, state.currentInput, cursorPosition]);
+  }, [handleKeyDown, isTyping, state.currentInput, cursorPosition, handleInputChange]);
 
   useEffect(() => {
-    // Focus on mount but prevent scrolling
+    // Enhanced focus handling for Android compatibility
     if (inputRef.current) {
-      inputRef.current.focus({ preventScroll: true });
+      const inputElement = inputRef.current;
+      
+      // Focus with Android optimization
+      inputElement.focus({ preventScroll: true });
+      
+      // Android-specific focus handling
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      if (isAndroid) {
+        // Force focus on Android with slight delay
+        setTimeout(() => {
+          inputElement.focus();
+          inputElement.click();
+        }, 100);
+        
+        // Ensure input is properly set up for Android
+        inputElement.setAttribute('autocomplete', 'off');
+        inputElement.setAttribute('autocorrect', 'off');
+        inputElement.setAttribute('autocapitalize', 'none');
+        inputElement.setAttribute('spellcheck', 'false');
+      }
     }
   }, []);
 
@@ -342,6 +397,7 @@ export const useTerminal = () => {
     inputRef,
     state,
     notification,
-    hasUsedTab
+    hasUsedTab,
+    handleInputChange
   };
 };

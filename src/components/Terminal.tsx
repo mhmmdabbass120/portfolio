@@ -26,9 +26,13 @@ const TypeWriter = ({ text }: { text: string }) => {
 };
 
 export const Terminal = () => {
-  const { output, currentInput, cursorPosition, prompt, isTyping, clear, notification, hasUsedTab, executeCommand, state } = useTerminal();
+  const { output, currentInput, cursorPosition, prompt, isTyping, clear, notification, hasUsedTab, executeCommand, state, handleInputChange } = useTerminal();
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Android device detection for enhanced compatibility
+  const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const [showBootSequence, setShowBootSequence] = useState(true);
   const [bootComplete, setBootComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -36,6 +40,7 @@ export const Terminal = () => {
   const [lastOutputLength, setLastOutputLength] = useState(0);
   const [currentTheme, setCurrentTheme] = useState('');
   const [showTabHint, setShowTabHint] = useState(true);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [codeSnippets] = useState([
     'console.log("Hello World");',
     'console.log("Welcome to my portfolio");',
@@ -53,7 +58,7 @@ export const Terminal = () => {
       
       // Fade out boot sequence
       setTimeout(() => {
-        setShowBootSequence(false);
+      setShowBootSequence(false);
       }, 800);
       
       // Show terminal with fade-in
@@ -72,11 +77,12 @@ export const Terminal = () => {
   }, []);
 
   useEffect(() => {
-    // Only auto-scroll when new output is actually added (not when typing) and terminal is fully loaded
+    // Simple terminal auto-scroll: only scroll when new output is added and user is near bottom
     if (terminalRef.current && output.length > lastOutputLength && bootComplete && !isTransitioning) {
       const scrollElement = terminalRef.current;
       const isNearBottom = scrollElement.scrollHeight - scrollElement.clientHeight <= scrollElement.scrollTop + 100;
       
+      // Only auto-scroll if user is already near the bottom
       if (isNearBottom) {
         setTimeout(() => {
           scrollElement.scrollTop = scrollElement.scrollHeight;
@@ -94,24 +100,68 @@ export const Terminal = () => {
       if (inputRef.current && !isTyping && bootComplete && 
           terminalRef.current && terminalRef.current.contains(target)) {
         e.preventDefault();
-        // Prevent any scrolling when focusing the input
-        const currentScrollTop = terminalRef.current.scrollTop;
+        
+        // Save current scroll positions before focusing
+        const currentPageScroll = window.pageYOffset;
+        const currentTerminalScroll = terminalRef.current.scrollTop;
+        
         inputRef.current.focus({ preventScroll: true });
-        // Restore scroll position if it changed
+        
+        // Restore both page and terminal scroll positions
         setTimeout(() => {
+          window.scrollTo({ top: currentPageScroll, behavior: 'auto' });
           if (terminalRef.current) {
-            terminalRef.current.scrollTop = currentScrollTop;
+            terminalRef.current.scrollTop = currentTerminalScroll;
           }
         }, 0);
       }
     };
 
+    // Enhanced touch events for Android compatibility
+    const handleTouch = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (inputRef.current && !isTyping && bootComplete && 
+          terminalRef.current && terminalRef.current.contains(target)) {
+        
+        // Save current scroll position for mobile
+        const currentPageScroll = window.pageYOffset;
+        
+        // Enhanced Android focus handling
+        if (isAndroid) {
+          // Force focus and click for Android virtual keyboard
+          inputRef.current.focus();
+          inputRef.current.click();
+          
+          // Trigger input events to ensure keyboard shows
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.focus();
+              // Simulate a small input change to wake up Android keyboard
+              const evt = new Event('focus', { bubbles: true });
+              inputRef.current.dispatchEvent(evt);
+            }
+          }, 50);
+        } else {
+          inputRef.current.focus({ preventScroll: true });
+        }
+        
+        // Restore page scroll position on mobile
+        setTimeout(() => {
+          window.scrollTo({ top: currentPageScroll, behavior: 'auto' });
+        }, 0);
+      }
+    };
+
     document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    document.addEventListener('touchstart', handleTouch);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('touchstart', handleTouch);
+    };
   }, [isTyping, bootComplete]);
 
   useEffect(() => {
-    // Auto-focus input and scroll to top on boot complete
+    // Auto-focus input and scroll to top when terminal loads
     if (bootComplete && inputRef.current) {
       inputRef.current.focus({ preventScroll: true });
       
@@ -123,6 +173,36 @@ export const Terminal = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [bootComplete]);
+
+
+
+  // We no longer lock the body scrolling with a class; focusing the fixed input at top prevents jumps naturally.
+  // (Left intentionally blank)
+
+  // Handle viewport changes on mobile (virtual keyboard) - Simplified
+  useEffect(() => {
+    if (!bootComplete || window.innerWidth > 768) return;
+
+    const handleViewportChange = () => {
+      // Simple viewport height adjustment for mobile keyboards
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const windowHeight = window.innerHeight;
+      const heightDifference = windowHeight - viewportHeight;
+      
+      // Only adjust if keyboard is open and input is focused
+      if (heightDifference > 150 && isInputFocused && terminalRef.current) {
+        terminalRef.current.style.maxHeight = `${Math.min(viewportHeight * 0.7, 500)}px`;
+      } else if (terminalRef.current) {
+        terminalRef.current.style.maxHeight = '75vh';
+      }
+    };
+
+    // Use visual viewport API if available
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      return () => window.visualViewport.removeEventListener('resize', handleViewportChange);
+    }
+  }, [bootComplete, isInputFocused]);
 
   // Add percentage animation effect
   useEffect(() => {
@@ -341,12 +421,12 @@ export const Terminal = () => {
 
   if (showBootSequence && !isTransitioning) {
     return (
-      <div className="min-h-screen bg-terminal-bg text-terminal-text px-2 py-4 sm:p-4 flex items-center justify-center boot-container">
+      <div className="min-h-screen bg-terminal-bg text-terminal-text px-3 py-6 sm:p-4 flex items-center justify-center boot-container">
         {/* Subtle background pattern */}
         <div className="circuit-bg opacity-30"></div>
         
         <div className="text-center boot-content w-full max-w-4xl relative z-10">
-          <div className="ascii-art mb-6 sm:mb-8 text-green-400 glowing-ascii">
+          <div className="ascii-art mb-8 sm:mb-8 text-green-400 glowing-ascii">
             {/* Desktop ASCII Art */}
             <pre className="hidden md:block text-base lg:text-lg font-mono whitespace-pre">
 {`
@@ -373,95 +453,79 @@ export const Terminal = () => {
             </pre>
             
             {/* Mobile ASCII Art */}
-            <div className="block sm:hidden mobile-ascii">
-              <pre className="text-sm font-mono whitespace-pre mobile-ascii-art">
-{`
- ███▄ ▄███▓ ▒█████   ██░ ██  ▄▄▄      
-▓██▒▀█▀ ██▒▒██▒  ██▒▓██░ ██▒▒████▄    
-▓██    ▓██░▒██░  ██▒▒██▀▀██░▒██  ▀█▄  
-▒██    ▒██ ▒██   ██░░▓█ ░██ ░██▄▄▄▄██ 
-▒██▒   ░██▒░ ████▓▒░░▓█▒░██▓ ▓█   ▓██▒
-░ ▒░   ░  ░░ ▒░▒░▒░  ▒ ░░▒░▒ ▒▒   ▓▒█░
-░  ░      ░  ░ ▒ ▒░  ▒ ░▒░ ░  ▒   ▒▒ ░
-
-        ▄▄▄       ▄▄▄▄    ▄▄▄▄    ▄▄▄       ██████   ██████ 
-       ▒████▄    ▓█████▄ ▓█████▄ ▒████▄   ▒██    ▒ ▒██    ▒ 
-       ▒██  ▀█▄  ▒██▒ ▄██▒██▒ ▄██▒██  ▀█▄ ░ ▓██▄   ░ ▓██▄   
-       ░██▄▄▄▄██ ▒██░█▀  ▒██░█▀  ░██▄▄▄▄██  ▒   ██▒  ▒   ██▒
-        ▓█   ▓██▒░▓█  ▀█▓░▓█  ▀█▓ ▓█   ▓██▒▒██████▒▒▒██████▒▒
-        ▒▒   ▓▒█░░▒▓███▀▒░▒▓███▀▒ ▒▒   ▓▒█░▒ ▒▓▒ ▒ ░▒ ▒▓▒ ▒ ░
-         ▒   ▒▒ ░▒░▒   ░ ▒░▒   ░  ▒   ▒▒ ░░ ░▒  ░ ░░ ░▒  ░ ░
-         ░   ▒    ░    ░  ░    ░  ░   ▒   ░  ░  ░  ░  ░  ░  
-             ░  ░ ░       ░           ░  ░      ░        ░  
-                       ░                                   
-`}
-              </pre>
+            <div className="block sm:hidden">
+              <div className="text-3xl font-bold mb-3 tracking-wider glowing-ascii">
+                MOHAMMAD
+              </div>
+              <div className="text-2xl font-bold tracking-widest glowing-ascii">
+                ABBASS
+              </div>
             </div>
           </div>
           
-          <div className="boot-sequence text-terminal-accent glowing-text px-2">
-            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '0.5s' }}>
-              <span><span className="text-terminal-accent">{'>'}</span> Initializing secure terminal...</span>
-              <span className="text-terminal-muted">
+          <div className="boot-sequence text-terminal-accent glowing-text px-3 sm:px-2">
+            <div className="mb-4 sm:mb-4 boot-item text-sm sm:text-sm md:text-base flex justify-between boot-line leading-relaxed" style={{ animationDelay: '0.5s' }}>
+              <span className="flex-1 pr-2"><span className="text-terminal-accent">{'>'}</span> Initializing secure terminal...</span>
+              <span className="text-terminal-muted text-xs sm:text-sm shrink-0">
                 [<span className="percentage" data-target="100">0</span>%] 
                 <span className="status-ok ml-1">[OK]</span>
               </span>
             </div>
-            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '1s' }}>
-              <span><span className="text-terminal-accent">{'>'}</span> Loading cybersecurity protocols...</span>
-              <span className="text-terminal-muted">
+            <div className="mb-4 sm:mb-4 boot-item text-sm sm:text-sm md:text-base flex justify-between boot-line leading-relaxed" style={{ animationDelay: '1s' }}>
+              <span className="flex-1 pr-2"><span className="text-terminal-accent">{'>'}</span> Loading cybersecurity protocols...</span>
+              <span className="text-terminal-muted text-xs sm:text-sm shrink-0">
                 [<span className="percentage" data-target="100">0</span>%] 
                 <span className="status-ok ml-1">[OK]</span>
               </span>
             </div>
-            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '1.5s' }}>
-              <span><span className="text-terminal-accent">{'>'}</span> Establishing connection...</span>
-              <span className="text-terminal-muted">
+            <div className="mb-4 sm:mb-4 boot-item text-sm sm:text-sm md:text-base flex justify-between boot-line leading-relaxed" style={{ animationDelay: '1.5s' }}>
+              <span className="flex-1 pr-2"><span className="text-terminal-accent">{'>'}</span> Establishing connection...</span>
+              <span className="text-terminal-muted text-xs sm:text-sm shrink-0">
                 [<span className="percentage" data-target="100">0</span>%] 
                 <span className="status-ok ml-1">[OK]</span>
               </span>
             </div>
-            <div className="mb-3 sm:mb-4 boot-item text-xs sm:text-sm md:text-base flex justify-between boot-line" style={{ animationDelay: '2s' }}>
-              <span><span className="text-terminal-accent">{'>'}</span> Compiling portfolio interface...</span>
-              <span className="text-terminal-muted">
+            <div className="mb-4 sm:mb-4 boot-item text-sm sm:text-sm md:text-base flex justify-between boot-line leading-relaxed" style={{ animationDelay: '2s' }}>
+              <span className="flex-1 pr-2"><span className="text-terminal-accent">{'>'}</span> Compiling portfolio interface...</span>
+              <span className="text-terminal-muted text-xs sm:text-sm shrink-0">
                 [<span className="percentage" data-target="100">0</span>%] 
                 <span className="status-ok ml-1">[OK]</span>
               </span>
             </div>
 
             
-            <div className="loading-bar mt-6 sm:mt-8 boot-item px-4 sm:px-8" style={{ animationDelay: '2s' }}>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-terminal-muted">Loading Progress:</span>
-                <span className="text-xs text-terminal-accent">
+            <div className="loading-bar mt-8 sm:mt-8 boot-item px-4 sm:px-8" style={{ animationDelay: '2s' }}>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm sm:text-xs text-terminal-muted font-medium">Loading Progress:</span>
+                <span className="text-sm sm:text-xs text-terminal-accent font-bold">
                   <span className="main-percentage" data-target="100">0</span>%
                 </span>
               </div>
-              <div className="bg-terminal-border h-2 rounded relative overflow-hidden">
-                <div className="bg-terminal-accent h-2 rounded glowing-progress animated-progress-bar" style={{
+              <div className="bg-terminal-border h-3 sm:h-2 rounded relative overflow-hidden">
+                <div className="bg-terminal-accent h-3 sm:h-2 rounded glowing-progress animated-progress-bar" style={{
                   width: '0%',
                   animation: 'loadingBarFill 3s ease-in-out forwards'
                 }}></div>
               </div>
             </div>
             
-            <div className="mt-6 sm:mt-8 text-xs sm:text-sm text-terminal-muted typing-welcome px-2" style={{ animationDelay: '3.2s' }}>
+            <div className="mt-8 sm:mt-8 text-sm sm:text-sm text-terminal-muted typing-welcome px-3" style={{ animationDelay: '3.2s' }}>
               <TypeWriter text="Welcome to Mohammad Abbass Terminal" />
             </div>
             
             {/* Clean status indicators */}
-            <div className="mt-6 flex justify-center space-x-6 text-xs opacity-75" style={{ animationDelay: '3.5s' }}>
+            <div className="mt-8 flex justify-center space-x-4 sm:space-x-6 text-sm sm:text-xs opacity-75" style={{ animationDelay: '3.5s' }}>
               <div className="boot-item flex items-center space-x-2">
-                <span className="w-2 h-2 bg-terminal-accent rounded-full animate-pulse"></span>
-                <span className="text-terminal-muted">SECURE</span>
+                <span className="w-3 h-3 sm:w-2 sm:h-2 bg-terminal-accent rounded-full animate-pulse"></span>
+                <span className="text-terminal-muted font-medium">SECURE</span>
               </div>
               <div className="boot-item flex items-center space-x-2">
-                <span className="w-2 h-2 bg-terminal-accent rounded-full animate-pulse"></span>
-                <span className="text-terminal-muted">READY</span>
+                <span className="w-3 h-3 sm:w-2 sm:h-2 bg-terminal-accent rounded-full animate-pulse"></span>
+                <span className="text-terminal-muted font-medium">READY</span>
               </div>
               <div className="boot-item flex items-center space-x-2">
-                <span className="w-2 h-2 bg-terminal-accent rounded-full animate-pulse"></span>
-                <span className="text-terminal-muted">ONLINE</span>
+                <span className="w-3 h-3 sm:w-2 sm:h-2 bg-terminal-accent rounded-full animate-pulse"></span>
+                <span className="text-terminal-muted font-medium">ONLINE</span>
               </div>
             </div>
           </div>
@@ -479,26 +543,17 @@ export const Terminal = () => {
           {showBootSequence && (
             <div className="absolute inset-0 flex items-center justify-center boot-fade-out">
               <div className="circuit-bg opacity-30"></div>
-                             <div className="text-center boot-content w-full max-w-4xl relative z-10 transition-boot-out">
-                 <div className="ascii-art mb-6 sm:mb-8 text-green-400 glowing-ascii">
-                   <div className="block sm:hidden mobile-ascii">
-                     <pre className="text-xs font-mono whitespace-pre mobile-ascii-art">
-{`
- ███▄ ▄███▓ ▒█████   ██░ ██  ▄▄▄      
-▓██▒▀█▀ ██▒▒██▒  ██▒▓██░ ██▒▒████▄    
-▓██    ▓██░▒██░  ██▒▒██▀▀██░▒██  ▀█▄  
-▒██    ▒██ ▒██   ██░░▓█ ░██ ░██▄▄▄▄██ 
-▒██▒   ░██▒░ ████▓▒░░▓█▒░██▓ ▓█   ▓██▒
-
-        ▄▄▄       ▄▄▄▄    ▄▄▄▄    ▄▄▄       ██████   ██████ 
-       ▒████▄    ▓█████▄ ▓█████▄ ▒████▄   ▒██    ▒ ▒██    ▒ 
-       ▒██  ▀█▄  ▒██▒ ▄██▒██▒ ▄██▒██  ▀█▄ ░ ▓██▄   ░ ▓██▄   
-       ░██▄▄▄▄██ ▒██░█▀  ▒██░█▀  ░██▄▄▄▄██  ▒   ██▒  ▒   ██▒
-        ▓█   ▓██▒░▓█  ▀█▓░▓█  ▀█▓ ▓█   ▓██▒▒██████▒▒▒██████▒▒
-`}
-                     </pre>
-                   </div>
-                 </div>
+              <div className="text-center boot-content w-full max-w-4xl relative z-10 transition-boot-out">
+                <div className="ascii-art mb-8 sm:mb-8 text-green-400 glowing-ascii">
+                  <div className="block sm:hidden">
+                    <div className="text-3xl font-bold mb-3 tracking-wider glowing-ascii">
+                      MOHAMMAD
+                    </div>
+                    <div className="text-2xl font-bold tracking-widest glowing-ascii">
+                      ABBASS
+                    </div>
+                  </div>
+                </div>
                 <div className="text-center text-terminal-accent">
                   <div className="loading-dots">
                     <span>Initializing Terminal Interface</span>
@@ -540,6 +595,12 @@ export const Terminal = () => {
       <div className="matrix-rain"></div>
       <div className="matrix-rain-2"></div>
       <div className="matrix-rain-3"></div>
+      
+      {/* Horizontal flying text - left to right and right to left */}
+      <div className="matrix-rain-horizontal-lr"></div>
+      <div className="matrix-rain-horizontal-lr-2"></div>
+      <div className="matrix-rain-horizontal-rl"></div>
+      <div className="matrix-rain-horizontal-rl-2"></div>
       
       {/* Floating code snippets */}
       {codeSnippets.map((code, index) => (
@@ -818,16 +879,17 @@ export const Terminal = () => {
           </div>
         </div>
         
-        {/* Hidden input for keyboard capture - positioned to be accessible on mobile */}
+        {/* Enhanced Android-compatible input field */}
         <input
           ref={inputRef}
+          type="text"
           className="fixed opacity-0 pointer-events-auto"
           style={{
             position: 'fixed',
-            bottom: '0px',
-            left: '0px',
-            width: '100%',
-            height: '50px',
+            top: '50%',
+            left: '50%',
+            width: '1px',
+            height: '1px',
             border: 'none',
             outline: 'none',
             background: 'transparent',
@@ -835,35 +897,135 @@ export const Terminal = () => {
             fontSize: '16px', // Prevents zoom on iOS
             textTransform: 'none',
             color: 'transparent',
-            caretColor: 'transparent'
+            caretColor: 'transparent',
+            transform: 'translate(-50%, -50%)',
+            overflow: 'hidden',
+            // Enhanced Android compatibility
+            touchAction: 'manipulation',
+            userSelect: 'text',
+            WebkitUserSelect: 'text',
+            WebkitTapHighlightColor: 'transparent',
+            WebkitAppearance: 'none',
+            appearance: 'none'
           }}
+          // Enhanced Android attributes
           autoFocus
-          autoCapitalize="off"
+          autoCapitalize="none"
           autoComplete="off"
           autoCorrect="off"
-          spellCheck="false"
+          spellCheck={false}
           inputMode="text"
           enterKeyHint="done"
           data-gramm="false"
           data-gramm_editor="false"
           data-enable-grammarly="false"
-          value=""
-          onChange={() => {}} // Handled by useTerminal hook
-          onInput={(e) => {
-            const target = e.target as HTMLInputElement;
-            if (target.value) {
-              target.value = '';
+          // Android composition support
+          lang="en"
+          dir="ltr"
+          
+          // Controlled input value
+          value={currentInput}
+          
+          // Enhanced change handlers for Android
+          onChange={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const newValue = e.target.value;
+            if (newValue !== currentInput) {
+              handleInputChange(newValue);
             }
           }}
+          
+          onInput={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = e.target as HTMLInputElement;
+            const newValue = target.value;
+            
+            // Force update for Android virtual keyboards
+            if (newValue !== currentInput) {
+              handleInputChange(newValue);
+            }
+          }}
+          
+          // Enhanced keyboard handling
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const input = currentInput.trim();
+              if (input) {
+                handleInputChange('');
+                executeCommand(input);
+              }
+            } else if (e.key === 'Tab') {
+              e.preventDefault();
+              // Handle tab completion
+            } else if (e.key === 'Backspace' && !currentInput) {
+              e.preventDefault();
+            }
+          }}
+          
+          onKeyUp={(e) => {
+            // Additional key handling for Android
+            e.stopPropagation();
+          }}
+          
+          // Enhanced focus handling
           onFocus={(e) => {
-            // Don't prevent default on mobile - let the keyboard show
             const target = e.target as HTMLInputElement;
             target.style.opacity = '0';
+            setIsInputFocused(true);
+            
+            // Ensure Android keyboards work
+            setTimeout(() => {
+              target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }, 100);
           }}
+          
           onBlur={(e) => {
             const target = e.target as HTMLInputElement;
             target.style.opacity = '0';
+            setIsInputFocused(false);
           }}
+          
+          // Enhanced touch handling for Android
+          onTouchStart={(e) => {
+            e.currentTarget.focus();
+          }}
+          
+          onTouchEnd={(e) => {
+            e.currentTarget.focus();
+          }}
+          
+          // Critical Android composition event handling
+          onCompositionStart={(e) => {
+            // Android is starting text composition
+            e.stopPropagation();
+          }}
+          
+          onCompositionUpdate={(e) => {
+            // Android is updating composition
+            e.stopPropagation();
+            const target = e.target as HTMLInputElement;
+            const newValue = target.value;
+            if (newValue !== currentInput) {
+              handleInputChange(newValue);
+            }
+          }}
+          
+          onCompositionEnd={(e) => {
+            // Android finished text composition
+            e.stopPropagation();
+            const target = e.target as HTMLInputElement;
+            const newValue = target.value;
+            if (newValue !== currentInput) {
+              handleInputChange(newValue);
+            }
+          }}
+          
+
         />
       </div>
     </div>
