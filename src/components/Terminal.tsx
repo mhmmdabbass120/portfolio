@@ -152,46 +152,14 @@ export const Terminal = () => {
       }
     };
 
-    // Handle copy/paste operations
-    const handlePaste = async (e: ClipboardEvent) => {
-      try {
-        e.preventDefault();
-        const text = e.clipboardData?.getData('text') || '';
-        if (text && inputRef.current === document.activeElement) {
-          handleInputChange(currentInput + text);
-        }
-      } catch (error) {
-        console.log('Paste not supported');
-      }
-    };
-
-    const handleCopy = (e: ClipboardEvent) => {
-      // Allow copying from terminal content
-      const selection = window.getSelection();
-      if (selection && selection.toString()) {
-        // Let browser handle the copy
-        return;
-      }
-      
-      // If nothing is selected and we're in input, copy current input
-      if (inputRef.current === document.activeElement && currentInput) {
-        e.clipboardData?.setData('text/plain', currentInput);
-        e.preventDefault();
-      }
-    };
-
     document.addEventListener('click', handleClick);
     document.addEventListener('touchstart', handleTouch);
-    document.addEventListener('paste', handlePaste);
-    document.addEventListener('copy', handleCopy);
     
     return () => {
       document.removeEventListener('click', handleClick);
       document.removeEventListener('touchstart', handleTouch);
-      document.removeEventListener('paste', handlePaste);
-      document.removeEventListener('copy', handleCopy);
     };
-  }, [isTyping, bootComplete, currentInput, handleInputChange]);
+  }, [isTyping, bootComplete]);
 
   useEffect(() => {
     // Auto-focus input and scroll to top when terminal loads
@@ -990,21 +958,10 @@ export const Terminal = () => {
           // Controlled input value
           value={currentInput}
           
-          // Enhanced change handlers for Android
+          // Single input handler to avoid duplicate typing
           onChange={(e) => {
             // Don't prevent default for copy/paste operations
             const newValue = e.target.value;
-            if (newValue !== currentInput) {
-              handleInputChange(newValue);
-            }
-          }}
-          
-          onInput={(e) => {
-            // Don't prevent default for copy/paste operations
-            const target = e.target as HTMLInputElement;
-            const newValue = target.value;
-            
-            // Force update for Android virtual keyboards
             if (newValue !== currentInput) {
               handleInputChange(newValue);
             }
@@ -1073,21 +1030,11 @@ export const Terminal = () => {
           }}
           
           onCompositionUpdate={(e) => {
-            // Android is updating composition
-            const target = e.target as HTMLInputElement;
-            const newValue = target.value;
-            if (newValue !== currentInput) {
-              handleInputChange(newValue);
-            }
+            // Android is updating composition - let onChange handle the value
           }}
           
           onCompositionEnd={(e) => {
-            // Android finished text composition
-            const target = e.target as HTMLInputElement;
-            const newValue = target.value;
-            if (newValue !== currentInput) {
-              handleInputChange(newValue);
-            }
+            // Android finished text composition - let onChange handle the final value
           }}
           
 
