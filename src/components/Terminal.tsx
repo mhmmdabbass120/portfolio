@@ -630,6 +630,9 @@ export const Terminal = () => {
               This is a fully functional terminal interface showcasing my skills, projects, and experience 
               in cybersecurity and software development. Navigate through my digital world using real terminal commands!
             </p>
+            <p className="mb-4 text-xs sm:text-sm text-terminal-muted opacity-75 animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+              💻 <em>For the best experience, use your laptop or desktop computer</em>
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6 text-xs sm:text-sm">
               <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 animate-slide-in-left hover-enhance animate-hover-slide-glow cursor-pointer" style={{ animationDelay: '0.8s' }}>
                 <span className="text-terminal-accent font-semibold animate-text-glow">💻 How to Navigate:</span>
