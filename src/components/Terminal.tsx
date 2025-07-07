@@ -152,13 +152,46 @@ export const Terminal = () => {
       }
     };
 
+    // Handle copy/paste operations
+    const handlePaste = async (e: ClipboardEvent) => {
+      try {
+        e.preventDefault();
+        const text = e.clipboardData?.getData('text') || '';
+        if (text && inputRef.current === document.activeElement) {
+          handleInputChange(currentInput + text);
+        }
+      } catch (error) {
+        console.log('Paste not supported');
+      }
+    };
+
+    const handleCopy = (e: ClipboardEvent) => {
+      // Allow copying from terminal content
+      const selection = window.getSelection();
+      if (selection && selection.toString()) {
+        // Let browser handle the copy
+        return;
+      }
+      
+      // If nothing is selected and we're in input, copy current input
+      if (inputRef.current === document.activeElement && currentInput) {
+        e.clipboardData?.setData('text/plain', currentInput);
+        e.preventDefault();
+      }
+    };
+
     document.addEventListener('click', handleClick);
     document.addEventListener('touchstart', handleTouch);
+    document.addEventListener('paste', handlePaste);
+    document.addEventListener('copy', handleCopy);
+    
     return () => {
       document.removeEventListener('click', handleClick);
       document.removeEventListener('touchstart', handleTouch);
+      document.removeEventListener('paste', handlePaste);
+      document.removeEventListener('copy', handleCopy);
     };
-  }, [isTyping, bootComplete]);
+  }, [isTyping, bootComplete, currentInput, handleInputChange]);
 
   useEffect(() => {
     // Auto-focus input and scroll to top when terminal loads
@@ -724,14 +757,26 @@ export const Terminal = () => {
           <div 
             ref={terminalRef}
             className="terminal-content"
+            style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
+            onContextMenu={(e) => {
+              // Allow right-click context menu for copy/paste
+              e.stopPropagation();
+            }}
           >
             {output.map((line, index) => (
-              <div key={index} className="output animate-fade-in">
+              <div 
+                key={index} 
+                className="output animate-fade-in"
+                style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
+              >
                 {renderTerminalLine(line)}
               </div>
             ))}
             
-            <div className="flex items-center mt-2">
+            <div 
+              className="flex items-center mt-2"
+              style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
+            >
               <span className="prompt" style={{ color: '#00cc00', textShadow: '0 0 4px rgba(0, 204, 0, 0.3)' }}>{prompt}</span>
               <span className="ml-2 text-terminal-text relative">
                 <span>{currentInput.substring(0, cursorPosition)}</span>
@@ -947,8 +992,7 @@ export const Terminal = () => {
           
           // Enhanced change handlers for Android
           onChange={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            // Don't prevent default for copy/paste operations
             const newValue = e.target.value;
             if (newValue !== currentInput) {
               handleInputChange(newValue);
@@ -956,8 +1000,7 @@ export const Terminal = () => {
           }}
           
           onInput={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            // Don't prevent default for copy/paste operations
             const target = e.target as HTMLInputElement;
             const newValue = target.value;
             
@@ -967,9 +1010,13 @@ export const Terminal = () => {
             }
           }}
           
-          // Enhanced keyboard handling
+          // Enhanced keyboard handling with copy/paste support
           onKeyDown={(e) => {
-            e.stopPropagation();
+            // Allow copy/paste shortcuts to work normally
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) {
+              // Let browser handle copy/paste/cut/select all
+              return;
+            }
             
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -987,8 +1034,10 @@ export const Terminal = () => {
           }}
           
           onKeyUp={(e) => {
-            // Additional key handling for Android
-            e.stopPropagation();
+            // Allow copy/paste shortcuts
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) {
+              return;
+            }
           }}
           
           // Enhanced focus handling
@@ -1020,13 +1069,11 @@ export const Terminal = () => {
           
           // Critical Android composition event handling
           onCompositionStart={(e) => {
-            // Android is starting text composition
-            e.stopPropagation();
+            // Android is starting text composition - don't block copy/paste
           }}
           
           onCompositionUpdate={(e) => {
             // Android is updating composition
-            e.stopPropagation();
             const target = e.target as HTMLInputElement;
             const newValue = target.value;
             if (newValue !== currentInput) {
@@ -1036,7 +1083,6 @@ export const Terminal = () => {
           
           onCompositionEnd={(e) => {
             // Android finished text composition
-            e.stopPropagation();
             const target = e.target as HTMLInputElement;
             const newValue = target.value;
             if (newValue !== currentInput) {
