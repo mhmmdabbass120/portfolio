@@ -154,7 +154,6 @@ export const Terminal = () => {
 
     document.addEventListener('click', handleClick);
     document.addEventListener('touchstart', handleTouch);
-    
     return () => {
       document.removeEventListener('click', handleClick);
       document.removeEventListener('touchstart', handleTouch);
@@ -725,26 +724,14 @@ export const Terminal = () => {
           <div 
             ref={terminalRef}
             className="terminal-content"
-            style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
-            onContextMenu={(e) => {
-              // Allow right-click context menu for copy/paste
-              e.stopPropagation();
-            }}
           >
             {output.map((line, index) => (
-              <div 
-                key={index} 
-                className="output animate-fade-in"
-                style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
-              >
+              <div key={index} className="output animate-fade-in">
                 {renderTerminalLine(line)}
               </div>
             ))}
             
-            <div 
-              className="flex items-center mt-2"
-              style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
-            >
+            <div className="flex items-center mt-2">
               <span className="prompt" style={{ color: '#00cc00', textShadow: '0 0 4px rgba(0, 204, 0, 0.3)' }}>{prompt}</span>
               <span className="ml-2 text-terminal-text relative">
                 <span>{currentInput.substring(0, cursorPosition)}</span>
@@ -958,22 +945,31 @@ export const Terminal = () => {
           // Controlled input value
           value={currentInput}
           
-          // Single input handler to avoid duplicate typing
+          // Enhanced change handlers for Android
           onChange={(e) => {
-            // Don't prevent default for copy/paste operations
+            e.preventDefault();
+            e.stopPropagation();
             const newValue = e.target.value;
             if (newValue !== currentInput) {
               handleInputChange(newValue);
             }
           }}
           
-          // Enhanced keyboard handling with copy/paste support
-          onKeyDown={(e) => {
-            // Allow copy/paste shortcuts to work normally
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) {
-              // Let browser handle copy/paste/cut/select all
-              return;
+          onInput={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = e.target as HTMLInputElement;
+            const newValue = target.value;
+            
+            // Force update for Android virtual keyboards
+            if (newValue !== currentInput) {
+              handleInputChange(newValue);
             }
+          }}
+          
+          // Enhanced keyboard handling
+          onKeyDown={(e) => {
+            e.stopPropagation();
             
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -991,10 +987,8 @@ export const Terminal = () => {
           }}
           
           onKeyUp={(e) => {
-            // Allow copy/paste shortcuts
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) {
-              return;
-            }
+            // Additional key handling for Android
+            e.stopPropagation();
           }}
           
           // Enhanced focus handling
@@ -1026,15 +1020,28 @@ export const Terminal = () => {
           
           // Critical Android composition event handling
           onCompositionStart={(e) => {
-            // Android is starting text composition - don't block copy/paste
+            // Android is starting text composition
+            e.stopPropagation();
           }}
           
           onCompositionUpdate={(e) => {
-            // Android is updating composition - let onChange handle the value
+            // Android is updating composition
+            e.stopPropagation();
+            const target = e.target as HTMLInputElement;
+            const newValue = target.value;
+            if (newValue !== currentInput) {
+              handleInputChange(newValue);
+            }
           }}
           
           onCompositionEnd={(e) => {
-            // Android finished text composition - let onChange handle the final value
+            // Android finished text composition
+            e.stopPropagation();
+            const target = e.target as HTMLInputElement;
+            const newValue = target.value;
+            if (newValue !== currentInput) {
+              handleInputChange(newValue);
+            }
           }}
           
 

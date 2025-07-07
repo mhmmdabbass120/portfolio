@@ -2367,7 +2367,7 @@
   /* Missing slide-in animations for desktop */
   .animate-slide-in-left {
     animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    opacity: 0;
+      opacity: 0;
     transform: translateX(-50px);
   }
 
