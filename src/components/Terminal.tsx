@@ -644,19 +644,19 @@ export const Terminal = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6 text-xs sm:text-sm">
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 info-card-bounce-in info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '0.8s' }}>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 animate-slide-in-left info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '0.8s' }}>
                 <span className="text-terminal-accent font-semibold text-glow-intense">
                   <span className="icon-bounce">💻</span> How to Navigate:
                 </span>
                 <p className="mt-1 sm:mt-2">Type "help" to see all available commands</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 info-card-slide-flip info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '1s' }}>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 animate-slide-in-up info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '1s' }}>
                 <span className="text-terminal-accent font-semibold text-glow-intense">
                   <span className="icon-bounce">🔍</span> Explore:
                 </span>
                 <p className="mt-1 sm:mt-2">Use "ls" and "cd" to browse directories</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1 info-card-spiral-in info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '1.2s' }}>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1 animate-slide-in-right info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '1.2s' }}>
                 <span className="text-terminal-accent font-semibold text-glow-intense">
                   <span className="icon-bounce">🎯</span> Pro Tip:
                 </span>
