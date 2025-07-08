@@ -578,8 +578,8 @@ export const commands: Record<string, Command> = {
         '   • Command usage monitored',
         '   • Session duration recorded',
         '',
-        '🔒 PRIVACY NOTE: All data stored locally for demo purposes',
-        '   Real analytics via Google Analytics (requires setup)',
+        '🔒 PRIVACY NOTE: Local demo + Google Analytics active',
+        '   Real visitor tracking: ✅ LIVE (G-NTM8XNRYDX)',
         '',
         '💡 Commands: analytics, stats, visitors',
         ''
@@ -622,8 +622,8 @@ export const commands: Record<string, Command> = {
         '',
         '📊 Visitor Patterns:',
         '   • Each browser session counts as 1 view',
-        '   • Data stored locally for demo',
-        '   • Real analytics available via Google Analytics',
+        '   • Local demo counter (this browser only)',
+        '   • Real analytics: ✅ ACTIVE via Google Analytics',
         '',
         '🎯 Popular Sections:',
         '   • Terminal commands usage',
@@ -636,7 +636,7 @@ export const commands: Record<string, Command> = {
         '   ✅ File system navigation',
         '   ✅ Easter eggs and surprises',
         '',
-        '🚀 Want real analytics? Set up Google Analytics!',
+        '🚀 Real analytics active! Check analytics.google.com',
         ''
       ];
     }

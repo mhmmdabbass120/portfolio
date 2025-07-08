@@ -5,29 +5,8 @@ declare global {
   }
 }
 
-// Google Analytics Measurement ID
+// Google Analytics Measurement ID (now initialized in HTML head)
 const GA_MEASUREMENT_ID = 'G-NTM8XNRYDX';
-
-// Initialize Google Analytics
-export const initGA = () => {
-  if (typeof window !== 'undefined') {
-    // Load Google Analytics script
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-    document.head.appendChild(script);
-
-    // Initialize gtag (matching standard GA setup)
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function gtag(...args: any[]) {
-      window.dataLayer.push(args);
-    };
-    window.gtag('js', new Date());
-    window.gtag('config', GA_MEASUREMENT_ID);
-
-    console.log('✅ Google Analytics initialized with ID:', GA_MEASUREMENT_ID);
-  }
-};
 
 // Track page views
 export const trackPageView = (pageTitle?: string) => {
