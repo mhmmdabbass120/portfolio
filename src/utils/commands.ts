@@ -1,4 +1,5 @@
 import { TerminalState, FileSystemItem } from '../types/terminal';
+import { getViewCount, getSessionInfo, trackCommand } from './analytics';
 
 export interface Command {
   description: string;
@@ -14,6 +15,7 @@ export const commands: Record<string, Command> = {
   help: {
     description: 'Show available commands',
     execute: async () => {
+      trackCommand('help');
       return [
         '🌟 Available commands:',
         '═══════════════════════════════════════════════════',
@@ -43,6 +45,11 @@ export const commands: Record<string, Command> = {
         '',
         '<span class="help-title">🔐 Security:</span>',
         '  sudo <cmd>  - Execute command with elevated privileges',
+        '',
+        '<span class="help-title">📊 Analytics:</span>',
+        '  analytics   - View detailed portfolio analytics',
+        '  stats       - Quick portfolio statistics',
+        '  visitors    - View visitor insights',
         '',
         '<span class="help-title">💡 Pro Tips:</span>',
         '  • Use Tab for autocomplete commands and files',
@@ -538,5 +545,122 @@ export const commands: Record<string, Command> = {
 
       return [`sudo: ${args.join(' ')}: command not found`, ''];
     }
+  },
+
+  analytics: {
+    description: 'View portfolio analytics and visitor statistics',
+    execute: async (args, state) => {
+      trackCommand('analytics');
+      const sessionInfo = getSessionInfo();
+      const viewCount = getViewCount();
+
+      if (!sessionInfo) {
+        return ['Analytics not available in this environment', ''];
+      }
+
+      return [
+        '📊 PORTFOLIO ANALYTICS DASHBOARD',
+        '═══════════════════════════════════════════════════════════════════',
+        '',
+        '👥 VISITOR STATISTICS:',
+        `   📈 Total Views: ${viewCount}`,
+        `   🕒 Session Started: ${sessionInfo.sessionStart.toLocaleString()}`,
+        `   🌐 Language: ${sessionInfo.language}`,
+        `   📱 Screen Size: ${sessionInfo.screenSize}`,
+        '',
+        '🖥️ TECHNICAL INFO:',
+        `   💻 User Agent: ${sessionInfo.userAgent.substring(0, 60)}...`,
+        `   🔧 Browser: ${getBrowserName(sessionInfo.userAgent)}`,
+        `   📱 Device: ${getDeviceType(sessionInfo.userAgent)}`,
+        '',
+        '📈 ENGAGEMENT METRICS:',
+        '   • Terminal interactions tracked',
+        '   • Command usage monitored',
+        '   • Session duration recorded',
+        '',
+        '🔒 PRIVACY NOTE: All data stored locally for demo purposes',
+        '   Real analytics via Google Analytics (requires setup)',
+        '',
+        '💡 Commands: analytics, stats, visitors',
+        ''
+      ];
+    }
+  },
+
+  stats: {
+    description: 'Quick portfolio statistics',
+    execute: async (args, state) => {
+      trackCommand('stats');
+      const viewCount = getViewCount();
+      const sessionInfo = getSessionInfo();
+
+      return [
+        '📊 Quick Stats:',
+        '─────────────────────────────────',
+        `👁️  Portfolio Views: ${viewCount}`,
+        `⏰ Session Time: ${getSessionDuration(sessionInfo?.sessionStart)} minutes`,
+        `🌐 Visitor Location: ${sessionInfo?.language || 'Unknown'}`,
+        `📱 Device: ${getDeviceType(sessionInfo?.userAgent || '')}`,
+        '',
+        '💡 Use "analytics" for detailed view',
+        ''
+      ];
+    }
+  },
+
+  visitors: {
+    description: 'View visitor information',
+    execute: async (args, state) => {
+      trackCommand('visitors');
+      const viewCount = getViewCount();
+      
+      return [
+        '👥 VISITOR INSIGHTS',
+        '═══════════════════════════════════════════',
+        '',
+        `🔢 Total Portfolio Views: ${viewCount}`,
+        '',
+        '📊 Visitor Patterns:',
+        '   • Each browser session counts as 1 view',
+        '   • Data stored locally for demo',
+        '   • Real analytics available via Google Analytics',
+        '',
+        '🎯 Popular Sections:',
+        '   • Terminal commands usage',
+        '   • Project portfolio browsing',
+        '   • Skills and experience review',
+        '',
+        '📈 Engagement Features:',
+        '   ✅ Interactive terminal interface',
+        '   ✅ Command auto-completion',
+        '   ✅ File system navigation',
+        '   ✅ Easter eggs and surprises',
+        '',
+        '🚀 Want real analytics? Set up Google Analytics!',
+        ''
+      ];
+    }
   }
 };
+
+// Helper functions for analytics
+function getBrowserName(userAgent: string): string {
+  if (userAgent.includes('Chrome')) return 'Chrome';
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Safari')) return 'Safari';
+  if (userAgent.includes('Edge')) return 'Edge';
+  return 'Unknown';
+}
+
+function getDeviceType(userAgent: string): string {
+  if (/Mobile|Android|iPhone|iPad/.test(userAgent)) return 'Mobile';
+  if (/Tablet|iPad/.test(userAgent)) return 'Tablet';
+  return 'Desktop';
+}
+
+function getSessionDuration(sessionStart?: Date): number {
+  if (!sessionStart) return 0;
+  const now = new Date();
+  const diff = now.getTime() - sessionStart.getTime();
+  return Math.floor(diff / 60000); // Convert to minutes
+}
