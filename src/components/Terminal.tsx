@@ -3,7 +3,7 @@ import { useTerminal } from '../hooks/useTerminal';
 import { filesystem } from '../data/filesystem';
 
 // TypeWriter component for typing animation
-const TypeWriter = ({ text }: { text: string }) => {
+const TypeWriter = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -12,10 +12,13 @@ const TypeWriter = ({ text }: { text: string }) => {
       const timeout = setTimeout(() => {
         setDisplayText(prev => prev + text[currentIndex]);
         setCurrentIndex(prev => prev + 1);
-      }, 80); // Typing speed
+      }, 30); // Faster typing speed
       return () => clearTimeout(timeout);
+    } else if (currentIndex === text.length && onComplete) {
+      // Call onComplete when typing is finished
+      onComplete();
     }
-  }, [currentIndex, text]);
+  }, [currentIndex, text, onComplete]);
 
   return (
     <span className="typing-text-animation">
@@ -41,6 +44,7 @@ export const Terminal = () => {
   const [currentTheme, setCurrentTheme] = useState('');
   const [showTabHint, setShowTabHint] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [typingComplete, setTypingComplete] = useState(false);
   const [codeSnippets] = useState([
     'console.log("Hello World");',
     'console.log("Welcome to my portfolio");',
@@ -619,46 +623,36 @@ export const Terminal = () => {
       <div className="max-w-6xl mx-auto relative z-10 p-4 pt-8 sm:pt-12 lg:pt-16">
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8 text-center px-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 animate-glow-pulse" style={{ color: '#00aa00', textShadow: '0 0 8px rgba(0, 170, 0, 0.4)' }}>
-            Welcome to Mohammad Abbass Portfolio
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 animate-fade-in-up" style={{ color: '#00aa00', textShadow: '0 0 8px rgba(0, 170, 0, 0.4)', animationDelay: '0.1s' }}>
+            Welcome to <span className="text-terminal-accent animate-pulse">Mohammad Abbass</span> Portfolio
           </h1>
           <div className="text-terminal-text max-w-3xl mx-auto">
             <p className="mb-3 sm:mb-4 text-base sm:text-lg animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              🚀 Interactive Terminal Portfolio Experience
+              <span className="animate-bounce inline-block">🚀</span> <span className="animate-pulse">Interactive Terminal Portfolio Experience</span>
             </p>
-            <p className="mb-4 text-sm sm:text-base leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-              This is a fully functional terminal interface showcasing my skills, projects, and experience 
-              in cybersecurity and software development. Navigate through my digital world using real terminal commands!
-            </p>
-            {/* Mobile-only laptop experience suggestion */}
-            <div className="block sm:hidden mb-4 animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
-              <div className="bg-yellow-900/30 border-2 border-yellow-500/60 rounded-lg p-3 mx-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-yellow-400 text-lg">💻</span>
-                  <span className="text-yellow-300 font-semibold text-sm">Best Experience Tip</span>
-                </div>
-                <p className="text-yellow-200 text-xs leading-relaxed">
-                  <strong>For the optimal terminal experience</strong>, consider switching to your laptop or desktop computer. 
-                  The full keyboard and larger screen will make navigating this portfolio much smoother!
-                </p>
-              </div>
+            <div className="mb-8 sm:mb-12 text-sm sm:text-base leading-relaxed" style={{ animationDelay: '0.6s', minHeight: '3rem' }}>
+              <TypeWriter 
+                text="This is a fully functional terminal interface showcasing my skills, projects, and experience in cybersecurity and software development. Navigate through my digital world using real terminal commands!" 
+                onComplete={() => setTypingComplete(true)}
+              />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6 text-xs sm:text-sm">
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 animate-slide-in-left info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '0.8s' }}>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-8 sm:mt-12 text-xs sm:text-sm">
+              <div className={`bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 ${typingComplete ? 'animate-slide-in-left info-card-enhanced info-card-float' : 'opacity-0'}`} style={{ animationDelay: typingComplete ? '0.1s' : '0s' }}>
                 <span className="text-terminal-accent font-semibold text-glow-intense">
-                  <span className="icon-bounce">💻</span> How to Navigate:
+                  <span className="icon-bounce inline-block hover:animate-pulse">💻</span> How to Navigate:
                 </span>
                 <p className="mt-1 sm:mt-2">Type "help" to see all available commands</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 animate-slide-in-up info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '1s' }}>
+              <div className={`bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 ${typingComplete ? 'animate-slide-in-up info-card-enhanced info-card-float' : 'opacity-0'}`} style={{ animationDelay: typingComplete ? '0.3s' : '0s' }}>
                 <span className="text-terminal-accent font-semibold text-glow-intense">
-                  <span className="icon-bounce">🔍</span> Explore:
+                  <span className="icon-bounce inline-block hover:animate-spin" style={{ animationDuration: '1s' }}>🔍</span> Explore:
                 </span>
                 <p className="mt-1 sm:mt-2">Use "ls" and "cd" to browse directories</p>
               </div>
-              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1 animate-slide-in-right info-card-enhanced info-card-float cursor-pointer" style={{ animationDelay: '1.2s' }}>
+              <div className={`bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 ${typingComplete ? 'animate-slide-in-right info-card-enhanced info-card-float' : 'opacity-0'}`} style={{ animationDelay: typingComplete ? '0.5s' : '0s' }}>
                 <span className="text-terminal-accent font-semibold text-glow-intense">
-                  <span className="icon-bounce">🎯</span> Pro Tip:
+                  <span className="icon-bounce inline-block hover:animate-bounce">🎯</span> Pro Tip:
                 </span>
                 <p className="mt-1 sm:mt-2">Try "sudo access secrets" for a surprise!</p>
               </div>
@@ -705,9 +699,28 @@ export const Terminal = () => {
             </div>
           )}
           
-          {/* Tab Hint Notification */}
+          {/* Best Experience Tip - Mobile only */}
+          {bootComplete && (
+            <div className="best-experience-bar bg-yellow-900/20 border border-yellow-400/50 text-yellow-300 px-3 py-2 text-xs mb-2 items-center justify-between flex sm:hidden" style={{ animationDelay: '2s' }}>
+              <div>
+                💻 <strong>Best Experience:</strong> Use laptop/desktop for full keyboard and larger screen experience
+              </div>
+              <button 
+                onClick={(e) => {
+                  const target = e.currentTarget.parentElement;
+                  if (target) target.style.display = 'none';
+                }}
+                className="ml-3 text-yellow-300 hover:text-yellow-100 transition-colors"
+                title="Dismiss hint"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          
+          {/* Tab Hint Notification - Laptop/Desktop only */}
           {showTabHint && bootComplete && !hasUsedTab && (
-            <div className="tab-hint-bar bg-blue-900/20 border border-blue-400/50 text-blue-300 px-3 py-1 text-xs animate-slide-in-up mb-2 flex items-center justify-between" style={{ animationDelay: '2s' }}>
+            <div className="tab-hint-bar bg-blue-900/20 border border-blue-400/50 text-blue-300 px-3 py-1 text-xs animate-slide-in-up mb-2 flex items-center justify-between hidden sm:flex" style={{ animationDelay: '2s' }}>
               <span>
                 💡 <strong>Pro Tip:</strong> Press <kbd className="bg-blue-800/50 px-1 py-0.5 rounded text-xs border border-blue-400/30 mx-1">Tab</kbd> to autocomplete commands and filenames!
               </span>
