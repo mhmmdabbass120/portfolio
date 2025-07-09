@@ -41,6 +41,7 @@ export const commands: Record<string, Command> = {
         '  fortune     - Random cybersecurity quote',
         '  skills      - Quick access to skills directory',
         '  projects    - Quick access to projects directory',
+        '  experience  - Quick access to experience directory',
 
         '',
         '<span class="help-title">🔐 Security:</span>',
@@ -450,6 +451,29 @@ export const commands: Record<string, Command> = {
         '  • pizza-hut - E-commerce & loyalty platform',
         '',
         '💡 Use "ls" to see all projects or "cd <project>" to explore',
+        ''
+      ];
+    }
+  },
+
+  experience: {
+    description: 'Quick access to experience directory',
+    execute: async (args, state, getCurrentDirectory, setState) => {
+      setState(prev => ({ ...prev, currentPath: ['experience'] }));
+      return [
+        '💼 Navigated to experience directory',
+        '',
+        '🏆 Current Professional Experience:',
+        '  • hash-bootcamp - Cybersecurity Bootcamp (Apr 2025 - Present)',
+        '  • xpertbot-advanced - Advanced Cybersecurity (Mar 2025 - Present)',
+        '  • overview.txt - Complete experience summary',
+        '',
+        '🎯 Highlights:',
+        '  ✅ Selected among 400+ applicants for Hash bootcamp',
+        '  ✅ 9+ months of active cybersecurity experience',
+        '  ✅ Specialized in Kali Linux & Network Security',
+        '',
+        '💡 Use "cat overview.txt" for summary or "cd <experience>" to explore',
         ''
       ];
     }

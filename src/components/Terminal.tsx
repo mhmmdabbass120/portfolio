@@ -12,7 +12,7 @@ const TypeWriter = ({ text, onComplete }: { text: string; onComplete?: () => voi
       const timeout = setTimeout(() => {
         setDisplayText(prev => prev + text[currentIndex]);
         setCurrentIndex(prev => prev + 1);
-      }, 30); // Faster typing speed
+      }, 80); // Slower typing speed
       return () => clearTimeout(timeout);
     } else if (currentIndex === text.length && onComplete) {
       // Call onComplete when typing is finished
@@ -982,10 +982,9 @@ export const Terminal = () => {
           
           // Enhanced keyboard handling
           onKeyDown={(e) => {
-            e.stopPropagation();
-            
             if (e.key === 'Enter') {
               e.preventDefault();
+              e.stopPropagation();
               const input = currentInput.trim();
               if (input) {
                 handleInputChange('');
@@ -993,9 +992,13 @@ export const Terminal = () => {
               }
             } else if (e.key === 'Tab') {
               e.preventDefault();
-              // Handle tab completion
+              // Don't stop propagation for Tab key so the global keydown listener can handle tab completion
             } else if (e.key === 'Backspace' && !currentInput) {
               e.preventDefault();
+              e.stopPropagation();
+            } else {
+              // For all other keys, stop propagation to prevent double input
+              e.stopPropagation();
             }
           }}
           
