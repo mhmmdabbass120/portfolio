@@ -638,19 +638,19 @@ export const Terminal = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-8 sm:mt-12 text-xs sm:text-sm">
-              <div className={`bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 ${typingComplete ? 'animate-slide-in-left info-card-enhanced info-card-float' : 'opacity-0'}`} style={{ animationDelay: typingComplete ? '0.1s' : '0s' }}>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 info-card-float-continuous animate-float-left">
                 <span className="text-terminal-accent font-semibold text-glow-intense">
                   <span className="icon-bounce inline-block hover:animate-pulse">💻</span> How to Navigate:
                 </span>
                 <p className="mt-1 sm:mt-2">Type "help" to see all available commands</p>
               </div>
-              <div className={`bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 ${typingComplete ? 'animate-slide-in-up info-card-enhanced info-card-float' : 'opacity-0'}`} style={{ animationDelay: typingComplete ? '0.3s' : '0s' }}>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 info-card-float-continuous animate-float-up">
                 <span className="text-terminal-accent font-semibold text-glow-intense">
                   <span className="icon-bounce inline-block hover:animate-spin" style={{ animationDuration: '1s' }}>🔍</span> Explore:
                 </span>
                 <p className="mt-1 sm:mt-2">Use "ls" and "cd" to browse directories</p>
               </div>
-              <div className={`bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 ${typingComplete ? 'animate-slide-in-right info-card-enhanced info-card-float' : 'opacity-0'}`} style={{ animationDelay: typingComplete ? '0.5s' : '0s' }}>
+              <div className="bg-terminal-bg/50 border border-terminal-border rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:bg-terminal-accent/20 hover:border-terminal-accent hover:shadow-lg hover:shadow-terminal-accent/20 info-card-float-continuous animate-float-right">
                 <span className="text-terminal-accent font-semibold text-glow-intense">
                   <span className="icon-bounce inline-block hover:animate-bounce">🎯</span> Pro Tip:
                 </span>
