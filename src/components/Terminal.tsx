@@ -81,16 +81,34 @@ export const Terminal = () => {
   }, []);
 
   useEffect(() => {
-    // Simple terminal auto-scroll: only scroll when new output is added and user is near bottom
+    // Enhanced terminal auto-scroll: always scroll to show new output, especially for analytics
     if (terminalRef.current && output.length > lastOutputLength && bootComplete && !isTransitioning) {
       const scrollElement = terminalRef.current;
-      const isNearBottom = scrollElement.scrollHeight - scrollElement.clientHeight <= scrollElement.scrollTop + 100;
+      const isNearBottom = scrollElement.scrollHeight - scrollElement.clientHeight <= scrollElement.scrollTop + 150;
       
-      // Only auto-scroll if user is already near the bottom
-      if (isNearBottom) {
+      // Check if the latest output contains analytics/stats commands
+      const latestOutput = output.slice(lastOutputLength).join(' ').toLowerCase();
+      const isAnalyticsCommand = latestOutput.includes('analytics') || 
+                                latestOutput.includes('visitor') || 
+                                latestOutput.includes('total views') ||
+                                latestOutput.includes('stats') ||
+                                latestOutput.includes('portfolio analytics');
+      
+      // Always scroll for analytics commands or if user is near bottom
+      if (isAnalyticsCommand || isNearBottom) {
+        // Use longer delay for analytics commands to ensure content is fully rendered
+        const delay = isAnalyticsCommand ? 200 : 50;
         setTimeout(() => {
-          scrollElement.scrollTop = scrollElement.scrollHeight;
-        }, 50);
+          if (scrollElement) {
+            scrollElement.scrollTop = scrollElement.scrollHeight;
+            // Force a second scroll after a brief delay to ensure it reaches the bottom
+            setTimeout(() => {
+              if (scrollElement) {
+                scrollElement.scrollTop = scrollElement.scrollHeight;
+              }
+            }, 100);
+          }
+        }, delay);
       }
       setLastOutputLength(output.length);
     }
@@ -207,6 +225,28 @@ export const Terminal = () => {
       return () => window.visualViewport.removeEventListener('resize', handleViewportChange);
     }
   }, [bootComplete, isInputFocused]);
+
+  // Force scroll for analytics commands
+  useEffect(() => {
+    const handleForceScroll = () => {
+      if (terminalRef.current) {
+        setTimeout(() => {
+          if (terminalRef.current) {
+            terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+            // Double scroll to ensure it reaches the bottom
+            setTimeout(() => {
+              if (terminalRef.current) {
+                terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+              }
+            }, 50);
+          }
+        }, 50);
+      }
+    };
+
+    window.addEventListener('forceAnalyticsScroll', handleForceScroll);
+    return () => window.removeEventListener('forceAnalyticsScroll', handleForceScroll);
+  }, []);
 
   // Add percentage animation effect
   useEffect(() => {
@@ -880,22 +920,55 @@ export const Terminal = () => {
               {/* Quick Actions */}
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <button
-                  onClick={() => executeCommand('ls')}
+                  onClick={() => {
+                    executeCommand('ls');
+                    // Scroll to terminal after command execution
+                    setTimeout(() => {
+                      terminalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }}
                   className="bg-terminal-bg/60 border border-terminal-border rounded-lg px-3 py-2 text-xs sm:text-sm text-terminal-accent hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300"
                 >
                   📋 List Contents
                 </button>
                 <button
-                  onClick={() => executeCommand('pwd')}
+                  onClick={() => {
+                    executeCommand('pwd');
+                    setTimeout(() => {
+                      terminalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }}
                   className="bg-terminal-bg/60 border border-terminal-border rounded-lg px-3 py-2 text-xs sm:text-sm text-terminal-accent hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300"
                 >
                   📍 Show Location
                 </button>
                 <button
-                  onClick={() => executeCommand('help')}
+                  onClick={() => {
+                    executeCommand('help');
+                    setTimeout(() => {
+                      terminalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }}
                   className="bg-terminal-bg/60 border border-terminal-border rounded-lg px-3 py-2 text-xs sm:text-sm text-terminal-accent hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300"
                 >
                   ❓ Show Help
+                </button>
+                <button
+                  onClick={() => {
+                    executeCommand('analytics');
+                    // Force scroll to terminal for analytics command
+                    setTimeout(() => {
+                      terminalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      setTimeout(() => {
+                        if (terminalRef.current) {
+                          terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+                        }
+                      }, 300);
+                    }, 100);
+                  }}
+                  className="bg-terminal-bg/60 border border-terminal-border rounded-lg px-3 py-2 text-xs sm:text-sm text-terminal-accent hover:bg-terminal-accent/10 hover:border-terminal-accent transition-all duration-300"
+                >
+                  📊 View Analytics
                 </button>
               </div>
             </div>

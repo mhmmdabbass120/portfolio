@@ -53,6 +53,16 @@ export const useTerminal = () => {
   const addOutput = useCallback((text: string | string[], typing: boolean = false) => {
     const lines = Array.isArray(text) ? text : [text];
     
+    // Check if this is analytics-related output
+    const textContent = lines.join(' ').toLowerCase();
+    const isAnalyticsOutput = textContent.includes('analytics') || 
+                             textContent.includes('visitor') || 
+                             textContent.includes('total views') ||
+                             textContent.includes('stats') ||
+                             textContent.includes('portfolio analytics') ||
+                             textContent.includes('visitor statistics') ||
+                             textContent.includes('visitor insights');
+    
     if (typing) {
       setIsTyping(true);
       // Simulate typing effect
@@ -69,6 +79,14 @@ export const useTerminal = () => {
       typeNextLine();
     } else {
       setOutput(prev => [...prev, ...lines]);
+      
+      // Force scroll after a delay for analytics output
+      if (isAnalyticsOutput) {
+        setTimeout(() => {
+          // Trigger a custom event to force scroll
+          window.dispatchEvent(new CustomEvent('forceAnalyticsScroll'));
+        }, 100);
+      }
     }
   }, []);
 

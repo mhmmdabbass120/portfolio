@@ -1,5 +1,5 @@
 import { TerminalState, FileSystemItem } from '../types/terminal';
-import { getViewCount, getSessionInfo, trackCommand } from './analytics';
+import { getViewCount, getSessionInfo, trackCommand, getVisitorStats } from './analytics';
 
 export interface Command {
   description: string;
@@ -571,43 +571,55 @@ export const commands: Record<string, Command> = {
     }
   },
 
-  analytics: {
+    analytics: {
     description: 'View portfolio analytics and visitor statistics',
     execute: async (args, state) => {
       trackCommand('analytics');
-      const sessionInfo = getSessionInfo();
-      const viewCount = getViewCount();
+      
+      try {
+        const visitorStats = await getVisitorStats();
+        
+        if (!visitorStats || !visitorStats.sessionInfo) {
+          return ['Analytics not available in this environment', ''];
+        }
 
-      if (!sessionInfo) {
-        return ['Analytics not available in this environment', ''];
+        const { totalViews, sessionInfo } = visitorStats;
+
+        return [
+          '📊 PORTFOLIO ANALYTICS DASHBOARD',
+          '═══════════════════════════════════════════════════════════════════',
+          '',
+          '👥 VISITOR STATISTICS:',
+          `   📈 Total Views: ${totalViews} (from ALL visitors)`,
+          `   🕒 Session Started: ${sessionInfo.sessionStart.toLocaleString()}`,
+          `   🌐 Language: ${sessionInfo.language}`,
+          `   📱 Screen Size: ${sessionInfo.screenSize}`,
+          '',
+          '🖥️ TECHNICAL INFO:',
+          `   💻 User Agent: ${sessionInfo.userAgent.substring(0, 60)}...`,
+          `   🔧 Browser: ${getBrowserName(sessionInfo.userAgent)}`,
+          `   📱 Device: ${getDeviceType(sessionInfo.userAgent)}`,
+          '',
+          '📈 ENGAGEMENT METRICS:',
+          '   • Terminal interactions tracked',
+          '   • Command usage monitored',
+          '   • Session duration recorded',
+          '   • Real-time visitor counting active',
+          '',
+          '🔒 PRIVACY NOTE: Real visitor tracking + Google Analytics active',
+          '   Visitor counter: ✅ LIVE (All devices combined)',
+          '   Google Analytics: ✅ LIVE (G-NTM8XNRYDX)',
+          '',
+          '💡 Commands: analytics, stats, visitors',
+          ''
+        ];
+      } catch (error) {
+        return [
+          '❌ Error loading analytics data',
+          '🔄 Please try again in a moment',
+          ''
+        ];
       }
-
-      return [
-        '📊 PORTFOLIO ANALYTICS DASHBOARD',
-        '═══════════════════════════════════════════════════════════════════',
-        '',
-        '👥 VISITOR STATISTICS:',
-        `   📈 Total Views: ${viewCount}`,
-        `   🕒 Session Started: ${sessionInfo.sessionStart.toLocaleString()}`,
-        `   🌐 Language: ${sessionInfo.language}`,
-        `   📱 Screen Size: ${sessionInfo.screenSize}`,
-        '',
-        '🖥️ TECHNICAL INFO:',
-        `   💻 User Agent: ${sessionInfo.userAgent.substring(0, 60)}...`,
-        `   🔧 Browser: ${getBrowserName(sessionInfo.userAgent)}`,
-        `   📱 Device: ${getDeviceType(sessionInfo.userAgent)}`,
-        '',
-        '📈 ENGAGEMENT METRICS:',
-        '   • Terminal interactions tracked',
-        '   • Command usage monitored',
-        '   • Session duration recorded',
-        '',
-        '🔒 PRIVACY NOTE: Local demo + Google Analytics active',
-        '   Real visitor tracking: ✅ LIVE (G-NTM8XNRYDX)',
-        '',
-        '💡 Commands: analytics, stats, visitors',
-        ''
-      ];
     }
   },
 
@@ -615,20 +627,34 @@ export const commands: Record<string, Command> = {
     description: 'Quick portfolio statistics',
     execute: async (args, state) => {
       trackCommand('stats');
-      const viewCount = getViewCount();
-      const sessionInfo = getSessionInfo();
+      
+      try {
+        const visitorStats = await getVisitorStats();
+        
+        if (!visitorStats || !visitorStats.sessionInfo) {
+          return ['Stats not available in this environment', ''];
+        }
 
-      return [
-        '📊 Quick Stats:',
-        '─────────────────────────────────',
-        `👁️  Portfolio Views: ${viewCount}`,
-        `⏰ Session Time: ${getSessionDuration(sessionInfo?.sessionStart)} minutes`,
-        `🌐 Visitor Location: ${sessionInfo?.language || 'Unknown'}`,
-        `📱 Device: ${getDeviceType(sessionInfo?.userAgent || '')}`,
-        '',
-        '💡 Use "analytics" for detailed view',
-        ''
-      ];
+        const { totalViews, sessionInfo } = visitorStats;
+
+        return [
+          '📊 Quick Stats:',
+          '─────────────────────────────────',
+          `👁️  Portfolio Views: ${totalViews} (ALL visitors)`,
+          `⏰ Session Time: ${getSessionDuration(sessionInfo.sessionStart)} minutes`,
+          `🌐 Visitor Location: ${sessionInfo.language || 'Unknown'}`,
+          `📱 Device: ${getDeviceType(sessionInfo.userAgent || '')}`,
+          '',
+          '💡 Use "analytics" for detailed view',
+          ''
+        ];
+      } catch (error) {
+        return [
+          '❌ Error loading stats',
+          '🔄 Please try again in a moment',
+          ''
+        ];
+      }
     }
   },
 
@@ -636,33 +662,43 @@ export const commands: Record<string, Command> = {
     description: 'View visitor information',
     execute: async (args, state) => {
       trackCommand('visitors');
-      const viewCount = getViewCount();
       
-      return [
-        '👥 VISITOR INSIGHTS',
-        '═══════════════════════════════════════════',
-        '',
-        `🔢 Total Portfolio Views: ${viewCount}`,
-        '',
-        '📊 Visitor Patterns:',
-        '   • Each browser session counts as 1 view',
-        '   • Local demo counter (this browser only)',
-        '   • Real analytics: ✅ ACTIVE via Google Analytics',
-        '',
-        '🎯 Popular Sections:',
-        '   • Terminal commands usage',
-        '   • Project portfolio browsing',
-        '   • Skills and experience review',
-        '',
-        '📈 Engagement Features:',
-        '   ✅ Interactive terminal interface',
-        '   ✅ Command auto-completion',
-        '   ✅ File system navigation',
-        '   ✅ Easter eggs and surprises',
-        '',
-        '🚀 Real analytics active! Check analytics.google.com',
-        ''
-      ];
+      try {
+        const totalViews = await getViewCount();
+        
+        return [
+          '👥 VISITOR INSIGHTS',
+          '═══════════════════════════════════════════',
+          '',
+          `🔢 Total Portfolio Views: ${totalViews} (ALL visitors combined)`,
+          '',
+          '📊 Visitor Patterns:',
+          '   • Real-time visitor counting from ALL devices',
+          '   • Each unique visitor session tracked',
+          '   • Google Analytics: ✅ ACTIVE for detailed insights',
+          '',
+          '🎯 Popular Sections:',
+          '   • Terminal commands usage',
+          '   • Project portfolio browsing',
+          '   • Skills and experience review',
+          '',
+          '📈 Engagement Features:',
+          '   ✅ Interactive terminal interface',
+          '   ✅ Command auto-completion',
+          '   ✅ File system navigation',
+          '   ✅ Easter eggs and surprises',
+          '',
+          '🚀 Real analytics active! Check analytics.google.com',
+          '💡 View count updates in real-time across all devices',
+          ''
+        ];
+      } catch (error) {
+        return [
+          '❌ Error loading visitor data',
+          '🔄 Please try again in a moment',
+          ''
+        ];
+      }
     }
   }
 };
