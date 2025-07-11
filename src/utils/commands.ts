@@ -1,5 +1,5 @@
 import { TerminalState, FileSystemItem } from '../types/terminal';
-import { getViewCount, getSessionInfo, trackCommand, getVisitorStats } from './analytics';
+import { getViewCount, getSessionInfo, trackCommand, getVisitorStats, getVisitorInsights } from './analytics';
 
 export interface Command {
   description: string;
@@ -561,10 +561,34 @@ export const commands: Record<string, Command> = {
           '   Email: mhmmd.h.abbass@gmail.com',
           '   Phone: +961 76 764 263',
           '',
-                  '💼 Ready to hire an aspiring cybersecurity professional?',
-        '    Type "cat resume.pdf" to download my CV!',
+          '💼 Ready to hire an aspiring cybersecurity professional?',
+          '    Type "cat resume.pdf" to download my CV!',
           ''
         ];
+      }
+
+      if (args[0] === 'reset' && args[1] === 'analytics') {
+        // Hidden debug command to reset visitor analytics
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('portfolio_visitor_log');
+          localStorage.removeItem('session_start');
+          localStorage.removeItem('has_visited_portfolio');
+          localStorage.removeItem('portfolio_views_fallback');
+          
+          return [
+            '🔧 DEVELOPER MODE: Analytics Reset',
+            '═══════════════════════════════════════',
+            '',
+            '✅ Visitor log cleared',
+            '✅ Session data reset',
+            '✅ Analytics counters reset',
+            '',
+            '🔄 Refresh the page to start fresh visitor tracking',
+            '💡 Use "analytics" to verify the reset',
+            ''
+          ];
+        }
+        return ['Analytics reset not available in this environment', ''];
       }
 
       return [`sudo: ${args.join(' ')}: command not found`, ''];
@@ -577,37 +601,52 @@ export const commands: Record<string, Command> = {
       trackCommand('analytics');
       
       try {
-        const visitorStats = await getVisitorStats();
+        const [visitorStats, visitorInsights] = await Promise.all([
+          getVisitorStats(),
+          getVisitorInsights()
+        ]);
         
         if (!visitorStats || !visitorStats.sessionInfo) {
           return ['Analytics not available in this environment', ''];
         }
 
-        const { totalViews, sessionInfo } = visitorStats;
+        const { totalViews, sessionInfo, demographics } = visitorStats;
+        const { topBrowser, topLanguage, topPlatform } = visitorInsights;
 
         return [
           '📊 PORTFOLIO ANALYTICS DASHBOARD',
           '═══════════════════════════════════════════════════════════════════',
           '',
           '👥 VISITOR STATISTICS:',
-          `   📈 Total Views: ${totalViews} (from ALL visitors)`,
+          `   📈 Total Unique Visitors: ${totalViews}`,
           `   🕒 Session Started: ${sessionInfo.sessionStart.toLocaleString()}`,
           `   🌐 Language: ${sessionInfo.language}`,
           `   📱 Screen Size: ${sessionInfo.screenSize}`,
+          `   🔑 Your Visitor ID: ${sessionInfo.visitorId?.substring(0, 8)}...`,
           '',
-          '🖥️ TECHNICAL INFO:',
-          `   💻 User Agent: ${sessionInfo.userAgent.substring(0, 60)}...`,
-          `   🔧 Browser: ${getBrowserName(sessionInfo.userAgent)}`,
-          `   📱 Device: ${getDeviceType(sessionInfo.userAgent)}`,
+          '🖥️ VISITOR DEMOGRAPHICS:',
+          `   🌐 Top Browser: ${topBrowser}`,
+          `   🗣️ Top Language: ${topLanguage}`,
+          `   💻 Top Platform: ${topPlatform}`,
+          '',
+          '📊 BROWSER BREAKDOWN:',
+          ...Object.entries(demographics.browsers).map(([browser, count]) => 
+            `   • ${browser}: ${count} visitor${count > 1 ? 's' : ''}`
+          ),
+          '',
+          '🌍 LANGUAGE BREAKDOWN:',
+          ...Object.entries(demographics.languages).map(([lang, count]) => 
+            `   • ${lang}: ${count} visitor${count > 1 ? 's' : ''}`
+          ),
           '',
           '📈 ENGAGEMENT METRICS:',
           '   • Terminal interactions tracked',
           '   • Command usage monitored',
           '   • Session duration recorded',
-          '   • Real-time visitor counting active',
+          '   • Unique visitor identification active',
           '',
-          '🔒 PRIVACY NOTE: Real visitor tracking + Google Analytics active',
-          '   Visitor counter: ✅ LIVE (All devices combined)',
+          '🔒 PRIVACY NOTE: Browser fingerprinting + Google Analytics',
+          '   Visitor tracking: ✅ LIVE (Unique ID based)',
           '   Google Analytics: ✅ LIVE (G-NTM8XNRYDX)',
           '',
           '💡 Commands: analytics, stats, visitors',
@@ -629,23 +668,23 @@ export const commands: Record<string, Command> = {
       trackCommand('stats');
       
       try {
-        const visitorStats = await getVisitorStats();
+        const visitorInsights = await getVisitorInsights();
+        const sessionInfo = await getSessionInfo();
         
-        if (!visitorStats || !visitorStats.sessionInfo) {
+        if (!sessionInfo) {
           return ['Stats not available in this environment', ''];
         }
-
-        const { totalViews, sessionInfo } = visitorStats;
 
         return [
           '📊 Quick Stats:',
           '─────────────────────────────────',
-          `👁️  Portfolio Views: ${totalViews} (ALL visitors)`,
+          `👁️  Unique Visitors: ${visitorInsights.totalUniqueVisitors}`,
           `⏰ Session Time: ${getSessionDuration(sessionInfo.sessionStart)} minutes`,
-          `🌐 Visitor Location: ${sessionInfo.language || 'Unknown'}`,
-          `📱 Device: ${getDeviceType(sessionInfo.userAgent || '')}`,
+          `🌐 Top Browser: ${visitorInsights.topBrowser}`,
+          `🗣️ Top Language: ${visitorInsights.topLanguage}`,
+          `📱 Top Platform: ${visitorInsights.topPlatform}`,
           '',
-          '💡 Use "analytics" for detailed view',
+          '💡 Use "analytics" for detailed breakdown',
           ''
         ];
       } catch (error) {
@@ -664,32 +703,39 @@ export const commands: Record<string, Command> = {
       trackCommand('visitors');
       
       try {
-        const totalViews = await getViewCount();
+        const visitorInsights = await getVisitorInsights();
         
         return [
           '👥 VISITOR INSIGHTS',
           '═══════════════════════════════════════════',
           '',
-          `🔢 Total Portfolio Views: ${totalViews} (ALL visitors combined)`,
+          `🔢 Total Unique Visitors: ${visitorInsights.totalUniqueVisitors}`,
           '',
           '📊 Visitor Patterns:',
-          '   • Real-time visitor counting from ALL devices',
-          '   • Each unique visitor session tracked',
+          '   • Browser fingerprinting for unique identification',
+          '   • Each unique device/browser combination tracked',
+          '   • Cross-session visitor recognition',
           '   • Google Analytics: ✅ ACTIVE for detailed insights',
           '',
-          '🎯 Popular Sections:',
-          '   • Terminal commands usage',
-          '   • Project portfolio browsing',
-          '   • Skills and experience review',
+          '🎯 Top Visitor Preferences:',
+          `   🌐 Most Popular Browser: ${visitorInsights.topBrowser}`,
+          `   🗣️ Most Common Language: ${visitorInsights.topLanguage}`,
+          `   💻 Most Used Platform: ${visitorInsights.topPlatform}`,
           '',
           '📈 Engagement Features:',
           '   ✅ Interactive terminal interface',
           '   ✅ Command auto-completion',
           '   ✅ File system navigation',
           '   ✅ Easter eggs and surprises',
+          '   ✅ Unique visitor identification',
+          '',
+          '🔒 Privacy-First Approach:',
+          '   • Anonymous visitor IDs (no personal data)',
+          '   • Local storage only (no external tracking)',
+          '   • Browser fingerprinting for uniqueness',
           '',
           '🚀 Real analytics active! Check analytics.google.com',
-          '💡 View count updates in real-time across all devices',
+          '💡 Each unique browser/device combo = 1 visitor',
           ''
         ];
       } catch (error) {

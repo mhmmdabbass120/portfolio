@@ -8,9 +8,37 @@ declare global {
 // Google Analytics Measurement ID (now initialized in HTML head)
 const GA_MEASUREMENT_ID = 'G-NTM8XNRYDX';
 
-// API endpoint for visitor tracking (using a simple free service)
-const VISITOR_API_URL = 'https://api.countapi.xyz/hit/mohammad-abbass-portfolio/views';
-const VISITOR_GET_URL = 'https://api.countapi.xyz/get/mohammad-abbass-portfolio/views';
+// Browser fingerprinting for unique visitor identification
+const generateVisitorId = (): string => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('Browser fingerprint', 2, 2);
+  }
+  
+  const fingerprint = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.platform,
+    navigator.hardwareConcurrency || 'unknown',
+    canvas.toDataURL()
+  ].join('|');
+  
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < fingerprint.length; i++) {
+    const char = fingerprint.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  return Math.abs(hash).toString(36);
+};
 
 // Track page views
 export const trackPageView = (pageTitle?: string) => {
@@ -41,43 +69,50 @@ export const trackCommand = (command: string) => {
   });
 };
 
-// Real visitor counter using external API service
+// Enhanced visitor tracking with unique IDs
 export const getViewCount = async (): Promise<number> => {
-  try {
-    const response = await fetch(VISITOR_GET_URL);
-    if (response.ok) {
-      const data = await response.json();
-      return data.value || 0;
-    }
-  } catch (error) {
-    console.log('Analytics API unavailable, using fallback');
-  }
-  
-  // Fallback to localStorage if API is unavailable
   if (typeof window !== 'undefined') {
-    const views = localStorage.getItem('portfolio_views_fallback');
-    return views ? parseInt(views, 10) : 0;
+    const visitorLog = localStorage.getItem('portfolio_visitor_log');
+    if (visitorLog) {
+      try {
+        const log = JSON.parse(visitorLog);
+        return Object.keys(log).length;
+      } catch (error) {
+        console.log('Error parsing visitor log:', error);
+      }
+    }
   }
   return 0;
 };
 
 export const incrementViewCount = async (): Promise<number> => {
-  try {
-    const response = await fetch(VISITOR_API_URL, { method: 'GET' });
-    if (response.ok) {
-      const data = await response.json();
-      return data.value || 0;
-    }
-  } catch (error) {
-    console.log('Analytics API unavailable, using fallback');
-  }
-  
-  // Fallback to localStorage if API is unavailable
   if (typeof window !== 'undefined') {
-    const currentViews = await getViewCount();
-    const newViews = currentViews + 1;
-    localStorage.setItem('portfolio_views_fallback', newViews.toString());
-    return newViews;
+    const visitorId = generateVisitorId();
+    let visitorLog: Record<string, any> = {};
+    
+    try {
+      const existingLog = localStorage.getItem('portfolio_visitor_log');
+      if (existingLog) {
+        visitorLog = JSON.parse(existingLog);
+      }
+    } catch (error) {
+      console.log('Error parsing existing visitor log:', error);
+    }
+    
+    // Add this visitor if not already present
+    if (!visitorLog[visitorId]) {
+      visitorLog[visitorId] = {
+        firstVisit: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        screenSize: `${screen.width}x${screen.height}`,
+        platform: navigator.platform
+      };
+      
+      localStorage.setItem('portfolio_visitor_log', JSON.stringify(visitorLog));
+    }
+    
+    return Object.keys(visitorLog).length;
   }
   return 0;
 };
@@ -85,11 +120,18 @@ export const incrementViewCount = async (): Promise<number> => {
 // Check if this is a new visitor session
 export const isNewVisitor = (): boolean => {
   if (typeof window !== 'undefined') {
-    const hasVisited = localStorage.getItem('has_visited_portfolio');
-    if (!hasVisited) {
-      localStorage.setItem('has_visited_portfolio', 'true');
-      return true;
+    const visitorId = generateVisitorId();
+    const visitorLog = localStorage.getItem('portfolio_visitor_log');
+    
+    if (visitorLog) {
+      try {
+        const log = JSON.parse(visitorLog);
+        return !log[visitorId];
+      } catch (error) {
+        console.log('Error checking visitor log:', error);
+      }
     }
+    return true;
   }
   return false;
 };
@@ -97,11 +139,15 @@ export const isNewVisitor = (): boolean => {
 // Initialize visitor tracking
 export const initializeVisitorTracking = async () => {
   if (isNewVisitor()) {
-    await incrementViewCount();
+    const newCount = await incrementViewCount();
     trackEvent('new_visitor', {
       timestamp: new Date().toISOString(),
       referrer: document.referrer || 'direct',
+      visitor_count: newCount,
     });
+    console.log('New visitor tracked! Total visitors:', newCount);
+  } else {
+    console.log('Returning visitor detected');
   }
 };
 
@@ -114,6 +160,7 @@ export const getSessionInfo = async () => {
     }
     
     const totalViews = await getViewCount();
+    const visitorId = generateVisitorId();
     
     return {
       viewCount: totalViews,
@@ -122,6 +169,7 @@ export const getSessionInfo = async () => {
       screenSize: `${window.screen.width}x${window.screen.height}`,
       language: navigator.language,
       isNewSession: !sessionStart,
+      visitorId: visitorId,
     };
   }
   return null;
@@ -132,9 +180,62 @@ export const getVisitorStats = async () => {
   const totalViews = await getViewCount();
   const sessionInfo = await getSessionInfo();
   
+  // Get visitor demographics
+  const visitorLog = localStorage.getItem('portfolio_visitor_log');
+  let demographics = {
+    browsers: {} as Record<string, number>,
+    languages: {} as Record<string, number>,
+    platforms: {} as Record<string, number>,
+  };
+  
+  if (visitorLog) {
+    try {
+      const log = JSON.parse(visitorLog);
+      Object.values(log).forEach((visitor: any) => {
+        // Extract browser from user agent
+        const browser = extractBrowser(visitor.userAgent || '');
+        demographics.browsers[browser] = (demographics.browsers[browser] || 0) + 1;
+        
+        // Track languages
+        const lang = visitor.language || 'unknown';
+        demographics.languages[lang] = (demographics.languages[lang] || 0) + 1;
+        
+        // Track platforms
+        const platform = visitor.platform || 'unknown';
+        demographics.platforms[platform] = (demographics.platforms[platform] || 0) + 1;
+      });
+    } catch (error) {
+      console.log('Error parsing visitor demographics:', error);
+    }
+  }
+  
   return {
     totalViews,
     sessionInfo,
+    demographics,
     timestamp: new Date().toISOString(),
+  };
+};
+
+// Helper function to extract browser name
+const extractBrowser = (userAgent: string): string => {
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Chrome')) return 'Chrome';
+  if (userAgent.includes('Safari')) return 'Safari';
+  if (userAgent.includes('Edge')) return 'Edge';
+  if (userAgent.includes('Opera')) return 'Opera';
+  return 'Unknown';
+};
+
+// Get visitor insights
+export const getVisitorInsights = async () => {
+  const stats = await getVisitorStats();
+  
+  return {
+    totalUniqueVisitors: stats.totalViews,
+    topBrowser: Object.entries(stats.demographics.browsers).sort(([,a], [,b]) => b - a)[0]?.[0] || 'Unknown',
+    topLanguage: Object.entries(stats.demographics.languages).sort(([,a], [,b]) => b - a)[0]?.[0] || 'Unknown',
+    topPlatform: Object.entries(stats.demographics.platforms).sort(([,a], [,b]) => b - a)[0]?.[0] || 'Unknown',
+    demographics: stats.demographics,
   };
 }; 
