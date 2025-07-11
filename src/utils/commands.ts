@@ -570,25 +570,71 @@ export const commands: Record<string, Command> = {
       if (args[0] === 'reset' && args[1] === 'analytics') {
         // Hidden debug command to reset visitor analytics
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('portfolio_visitor_log');
-          localStorage.removeItem('session_start');
-          localStorage.removeItem('has_visited_portfolio');
-          localStorage.removeItem('portfolio_views_fallback');
+          // Clear local storage visitor data
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key?.startsWith('visitor_') || key === 'session_start' || key === 'portfolio_visitor_count') {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
           
           return [
             '🔧 DEVELOPER MODE: Analytics Reset',
             '═══════════════════════════════════════',
             '',
-            '✅ Visitor log cleared',
+            '✅ Local visitor data cleared',
             '✅ Session data reset',
-            '✅ Analytics counters reset',
+            '⚠️  Shared counter remains (affects all users)',
             '',
             '🔄 Refresh the page to start fresh visitor tracking',
             '💡 Use "analytics" to verify the reset',
+            '💡 Note: Shared visitor count persists across all users',
             ''
           ];
         }
         return ['Analytics reset not available in this environment', ''];
+      }
+
+      if (args[0] === 'set' && args[1] === 'visitors' && args[2]) {
+        // Hidden debug command to set visitor count
+        const count = parseInt(args[2], 10);
+        if (isNaN(count)) {
+          return ['Invalid visitor count. Usage: sudo set visitors <number>', ''];
+        }
+
+        try {
+          const response = await fetch('https://api.jsonbin.io/v3/b/67914c8fad19ca34f8d5fdee', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': '$2a$10$HTwKHsLWM8IeBQiY8gO1Euw6KHe5YShjwYKW9ztZUwzYnLb/5NXCS'
+            },
+            body: JSON.stringify({
+              visitorCount: count,
+              lastUpdated: new Date().toISOString(),
+              note: `Manually set via terminal at ${new Date().toLocaleString()}`
+            })
+          });
+
+          if (response.ok) {
+            return [
+              '🔧 DEVELOPER MODE: Visitor Count Updated',
+              '═══════════════════════════════════════',
+              '',
+              `✅ Shared visitor count set to: ${count}`,
+              '✅ All users will now see this count',
+              '',
+              '💡 Use "analytics" to verify the change',
+              ''
+            ];
+          } else {
+            return ['❌ Failed to update shared visitor count', ''];
+          }
+        } catch (error) {
+          return ['❌ Network error updating visitor count', ''];
+        }
       }
 
       return [`sudo: ${args.join(' ')}: command not found`, ''];
